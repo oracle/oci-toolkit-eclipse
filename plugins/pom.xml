@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>com.oracle.oci.eclipse</groupId>
+   <artifactId>com.oracle.oci.eclipse.plugin</artifactId>
+   <packaging>eclipse-plugin</packaging>
+   <parent>
+     <groupId>com.oracle.oci.eclipse</groupId>
+     <artifactId>com.oracle.oci.eclipse.root</artifactId>
+     <version>1.0.0-SNAPSHOT</version>
+   </parent>
+   <build>
+    <plugins>
+      <plugin>
+        <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>3.0</version>
+          <executions>
+          <execution>
+            <id>first</id>
+            <goals>
+              <goal>format</goal>
+            </goals>
+            <phase>process-sources</phase>
+            <configuration>
+               <aggregate>true</aggregate>
+               <properties>
+                    <current.year>2019</current.year>
+                </properties>
+               <header>${project.parent.basedir}/licenseheader.txt</header>
+              <includes>
+                <include>src/com/**/*.java</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+        </plugin>
+      </plugins>
+   </build>
+</project>

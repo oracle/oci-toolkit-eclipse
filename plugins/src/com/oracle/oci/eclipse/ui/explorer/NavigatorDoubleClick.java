@@ -1,0 +1,157 @@
+/**
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
+package com.oracle.oci.eclipse.ui.explorer;
+
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+
+import com.oracle.bmc.objectstorage.model.BucketSummary;
+import com.oracle.oci.eclipse.ErrorHandler;
+import com.oracle.oci.eclipse.ui.explorer.common.EditorInput;
+import com.oracle.oci.eclipse.ui.explorer.compute.BlockStorageElement;
+import com.oracle.oci.eclipse.ui.explorer.compute.ComputeInstanceElement;
+import com.oracle.oci.eclipse.ui.explorer.compute.editor.InstanceEditor;
+import com.oracle.oci.eclipse.ui.explorer.compute.editor.VolumeEditor;
+import com.oracle.oci.eclipse.ui.explorer.objectstorage.editor.ObjectsEditor;
+
+public class NavigatorDoubleClick implements IDoubleClickListener{
+
+    TreeViewer viewer;
+    static IEditorPart editorPartCompute = null;
+    static IEditorPart editorPartBlockStorage = null;
+    IEditorPart editorPartBucket = null;
+    static ConcurrentHashMap<String, IEditorPart> bucketsEditorsMap = new ConcurrentHashMap<String, IEditorPart>();
+
+    public static ConcurrentHashMap<String, IEditorPart> getBucketsEditorsMap() {
+        return bucketsEditorsMap;
+    }
+
+    public NavigatorDoubleClick(TreeViewer viewer) {
+        this.viewer = viewer;
+    }
+
+    public static void closeAllComputeWindows() {
+        closeWindow(editorPartCompute);
+        closeWindow(editorPartBlockStorage);
+    }
+    public static void closeAllBucketWindows() {
+        for(Entry<String, IEditorPart> entry: bucketsEditorsMap.entrySet()) {
+            closeBucketWindow(entry.getKey());
+        }
+    }
+    public static void closeBucketWindow(String bucketName) {
+        closeWindow(bucketsEditorsMap.get(bucketName));
+        bucketsEditorsMap.remove(bucketName);
+    }
+    public static void closeWindow(IEditorPart currentEditorPart) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    IWorkbenchWindow activeWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                    if(currentEditorPart != null &&
+                            activeWindow.getActivePage().findEditor(currentEditorPart.getEditorInput()) != null) {
+                        activeWindow.getActivePage().closeEditor(currentEditorPart, false);
+                    }
+                } catch (Exception e) {
+                    ErrorHandler.logErrorStack(e.getMessage(), e);
+                }
+
+            }
+        });
+    }
+
+    @Override
+    public void doubleClick(DoubleClickEvent event) {
+        Action doubleClickAction = new Action() {
+            @Override
+            public void run() {
+                IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+                Object obj = selection.getFirstElement();
+
+                // Object Storage
+                if (obj instanceof BucketSummary) {
+                    BucketSummary bucket = (BucketSummary) obj;
+                    final IEditorInput input = new EditorInput(bucket.getName(), ObjectsEditor.HEADER);
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                IWorkbenchWindow activeWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                                // Keep a mapping between open windows IDs and the buckets name
+                                editorPartBucket = bucketsEditorsMap.get(bucket.getName());
+                                if(editorPartBucket == null ||
+                                        activeWindow.getActivePage().findEditor(editorPartBucket.getEditorInput()) == null) {
+
+                                    editorPartBucket = activeWindow.getActivePage().openEditor(input, ObjectsEditor.ID);
+                                    bucketsEditorsMap.put(bucket.getName(), editorPartBucket);
+                                } else {
+                                    activeWindow.getActivePage().activate(editorPartBucket);
+                                }
+                            } catch (Exception e) {
+                                ErrorHandler.logErrorStack(e.getMessage(), e);
+                            }
+                        }
+                    });
+                }
+                // Compute
+                if (obj instanceof ComputeInstanceElement) {
+                    final IEditorInput input = new EditorInput(InstanceEditor.TITLE, "");
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                IWorkbenchWindow activeWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                                // If the window is not created or it is closed, open it
+                                // else if the window is already open, activate it
+                                if(editorPartCompute == null ||
+                                        activeWindow.getActivePage().findEditor(editorPartCompute.getEditorInput()) == null) {
+                                    editorPartCompute = activeWindow.getActivePage().openEditor(input, InstanceEditor.ID);
+                                } else {
+                                    activeWindow.getActivePage().activate(editorPartCompute);
+                                }
+                            } catch (Exception e) {
+                                ErrorHandler.logErrorStack(e.getMessage(), e);
+                            }
+                        }
+                    });
+                }
+                // BS
+                if (obj instanceof BlockStorageElement) {
+                    final IEditorInput input = new EditorInput(VolumeEditor.TITLE, "");
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                IWorkbenchWindow activeWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                                if(editorPartBlockStorage == null ||
+                                        activeWindow.getActivePage().findEditor(editorPartBlockStorage.getEditorInput()) == null) {
+
+                                    editorPartBlockStorage = activeWindow.getActivePage().openEditor(input, VolumeEditor.ID);
+                                } else {
+                                    activeWindow.getActivePage().activate(editorPartBlockStorage);
+                                }
+                            } catch (Exception e) {
+                                ErrorHandler.logErrorStack(e.getMessage(), e);
+                            }
+                        }
+                    });
+                }
+            }
+        };
+        doubleClickAction.run();
+    }
+}

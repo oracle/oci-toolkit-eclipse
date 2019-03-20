@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.oracle.oci.eclipse.feature"
+      label="Oracle Cloud Infrastructure Toolkit"
+      version="1.0.0.qualifier"
+      provider-name="Oracle">
+
+   <description>
+      %featureDescription
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license  url="https://www.oracle.com/technetwork/licenses/upl-license-2927578.html">
+      %license
+   </license>
+
+   <requires>
+      <import plugin="org.eclipse.swt"/>
+      <import plugin="org.eclipse.jface"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.core.expressions"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.eclipse.ui.forms" version="3.3.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.navigator" version="3.2.0" match="greaterOrEqual"/>
+   </requires>
+
+   <plugin
+         id="com.oracle.oci.eclipse.plugin"
+         download-size="45000"
+         install-size="45000"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
