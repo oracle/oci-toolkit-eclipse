@@ -10,7 +10,7 @@ The project is open source and maintained by Oracle Corp.
 
 ## Home page 
 
-The project documentation is [here]().]
+The project documentation is [here]()
 
 ## Build and Installation
 
