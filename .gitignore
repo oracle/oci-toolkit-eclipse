@@ -1,0 +1,7 @@
+bin
+build
+features/target
+plugins/target
+tests/target
+tests/.settings
+releng/com.oracle.oci.eclipse.update/target
