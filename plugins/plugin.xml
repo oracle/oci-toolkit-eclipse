@@ -17,6 +17,8 @@
          <includes>
             <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.compute.navigatorContent" />
             <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.objectstorage.navigatorContent" />
+            <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.database.navigatorContent" />
+            <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.container.navigatorContent" />
          </includes>
       </viewerContentBinding>
    </extension>
@@ -88,6 +90,66 @@
           id="com.oracle.oci.eclipse.ui.explorer.compute.editor.VolumeEditor"
           name="Bucket" />
    </extension>
+
+   <!-- Container Clusters -->
+      <extension point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent activeByDefault="true"
+	      contentProvider="com.oracle.oci.eclipse.ui.explorer.container.ContainerContentProvider"
+	      labelProvider="com.oracle.oci.eclipse.ui.explorer.container.ContainerLabelProvider"
+	      id="com.oracle.oci.eclipse.ui.explorer.container.navigatorContent"
+	      name="Virtual content" priority="normal">
+         <triggerPoints>
+            <instanceof value="com.oracle.oci.eclipse.ui.explorer.RootElement" />
+         </triggerPoints>
+         <possibleChildren>
+            <or>
+               <instanceof value="com.oracle.oci.eclipse.ui.explorer.container.ContainerRootElement" />
+            </or>
+         </possibleChildren>
+      </navigatorContent>
+   </extension>
+   <!-- Container Clusters Editor -->
+   <extension point="org.eclipse.ui.editors">
+      <editor class="com.oracle.oci.eclipse.ui.explorer.container.editor.ContainerClustersEditor"
+          default="false"
+          icon="icons/compute-instance.png"
+          id="com.oracle.oci.eclipse.ui.explorer.container.editor.ContainerClustersEditor"
+          name="Clusters" />
+   </extension>
+
+   <!-- Autonomous Database -->
+      <extension point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent activeByDefault="true"
+	      contentProvider="com.oracle.oci.eclipse.ui.explorer.database.ADBContentProvider"
+	      labelProvider="com.oracle.oci.eclipse.ui.explorer.database.ADBLabelProvider"
+	      id="com.oracle.oci.eclipse.ui.explorer.database.navigatorContent"
+	      name="Virtual content" priority="normal">
+         <triggerPoints>
+            <instanceof value="com.oracle.oci.eclipse.ui.explorer.RootElement" />
+         </triggerPoints>
+         <possibleChildren>
+            <or>
+               <instanceof value="com.oracle.oci.eclipse.ui.explorer.database.ADBRootElement" />
+            </or>
+         </possibleChildren>
+         <actionProvider class="com.oracle.oci.eclipse.ui.explorer.database.ADBActionProvider"
+         				 id="org.eclipse.ui.examples.navigator.properties.actions.OpenADBActionProvider">
+         	<enablement>
+	               <instanceof value="com.oracle.oci.eclipse.ui.explorer.database.ADBRootElement" />
+           </enablement>
+         </actionProvider>
+      </navigatorContent>
+   </extension>
+   
+   <!-- ADB instance Editor -->
+   <extension point="org.eclipse.ui.editors">
+      <editor class="com.oracle.oci.eclipse.ui.explorer.database.editor.ADBInstanceEditor"
+          default="false"
+          icon="icons/database.png"
+          id="com.oracle.oci.eclipse.ui.explorer.database.editor.ADBInstanceEditor"
+          name="Bucket" />
+   </extension>
+ 
    <!-- perspectiveExtensions -->
    <extension point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension targetID="org.eclipse.ui.resourcePerspective">

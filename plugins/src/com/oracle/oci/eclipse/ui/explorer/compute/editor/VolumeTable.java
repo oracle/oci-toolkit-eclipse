@@ -13,9 +13,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.layout.TableColumnLayout;
-import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 
@@ -23,6 +20,7 @@ import com.oracle.bmc.core.model.Volume;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.sdkclients.BlockStorageClient;
 import com.oracle.oci.eclipse.ui.explorer.common.BaseTable;
+import com.oracle.oci.eclipse.ui.explorer.common.BaseTableLabelProvider;
 
 public class VolumeTable extends BaseTable {
     private int tableDataSize = 0;
@@ -68,24 +66,7 @@ public class VolumeTable extends BaseTable {
     }
 
     /* Label provider */
-    private final class TableLabelProvider implements ITableLabelProvider {
-
-        @Override
-        public void removeListener(ILabelProviderListener listener) {
-        }
-
-        @Override
-        public boolean isLabelProperty(Object element, String property) {
-            return true;
-        }
-
-        @Override
-        public void dispose() {
-        }
-
-        @Override
-        public void addListener(ILabelProviderListener listener) {
-        }
+    private final class TableLabelProvider extends BaseTableLabelProvider {
 
         @Override
         public String getColumnText(Object element, int columnIndex) {
@@ -106,11 +87,6 @@ public class VolumeTable extends BaseTable {
                 ex.printStackTrace();
             }
             return "";
-        }
-
-        @Override
-        public Image getColumnImage(Object element, int columnIndex) {
-            return null;
         }
     }
 

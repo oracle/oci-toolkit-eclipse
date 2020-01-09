@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.eclipse.sdkclients;
 
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.StandardCopyOption;
@@ -43,7 +44,7 @@ import com.oracle.bmc.objectstorage.transfer.UploadManager.UploadResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
 
-public class ObjStorageClient {
+public class ObjStorageClient extends BaseClient {
 
     private static ObjStorageClient single_instance = null;
     private static String namespaceName;
@@ -62,6 +63,12 @@ public class ObjStorageClient {
         return single_instance;
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        objectStorageClient.setRegion(evt.getNewValue().toString());
+    }
+
+    @Override
     public void updateClient() {
         close();
         createObjectStorageClient();
@@ -91,6 +98,7 @@ public class ObjStorageClient {
         return objectStorageClient;
     }
 
+    @Override
     public void close() {
         try {
             if (objectStorageClient != null) {
@@ -99,12 +107,6 @@ public class ObjStorageClient {
         } catch (Exception e) {
             ErrorHandler.logErrorStack(e.getMessage(), e);
         }
-    }
-
-    @Override
-    public void finalize() throws Throwable{
-        objectStorageClient.close();
-        single_instance = null;
     }
 
     public List<BucketSummary> getBuckets() throws Exception {
@@ -120,11 +122,16 @@ public class ObjStorageClient {
 
         do {
             listBucketsBuilder.page(nextToken);
-            ListBucketsResponse listBucketsResponse =
-                    objectStorageClient.listBuckets(listBucketsBuilder.build());
-            bList.addAll(listBucketsResponse.getItems());
+            try {
+                ListBucketsResponse listBucketsResponse =
+                        objectStorageClient.listBuckets(listBucketsBuilder.build());
+                bList.addAll(listBucketsResponse.getItems());
+                nextToken = listBucketsResponse.getOpcNextPage();
+            } catch(Throwable e) {
+                ErrorHandler.logError("Unable to list buckets: " + e.getMessage());
+                return bList;
+            }
 
-            nextToken = listBucketsResponse.getOpcNextPage();
         } while (nextToken != null);
 
         return bList;

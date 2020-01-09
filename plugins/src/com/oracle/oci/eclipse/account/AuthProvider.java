@@ -4,25 +4,12 @@
  */
 package com.oracle.oci.eclipse.account;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.swt.widgets.Display;
-
 import com.oracle.bmc.ClientRuntime;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
 import com.oracle.oci.eclipse.ErrorHandler;
-import com.oracle.oci.eclipse.sdkclients.BlockStorageClient;
-import com.oracle.oci.eclipse.sdkclients.ComputeInstanceClient;
-import com.oracle.oci.eclipse.sdkclients.IdentClient;
-import com.oracle.oci.eclipse.sdkclients.ObjStorageClient;
-import com.oracle.oci.eclipse.ui.account.CompartmentOptions;
-import com.oracle.oci.eclipse.ui.account.RegionOptions;
-import com.oracle.oci.eclipse.ui.explorer.NavigatorDoubleClick;
-import com.oracle.oci.eclipse.ui.explorer.objectstorage.ObjStorageContentProvider;
+import com.oracle.oci.eclipse.ui.account.ClientUpdateManager;
 
 
 public class AuthProvider {
@@ -35,6 +22,7 @@ public class AuthProvider {
     private String currentRegionName = PreferencesWrapper.getRegion();
     private String currentCompartmentId;
 
+
     public static AuthProvider getInstance()
     {
         if (single_instance == null) {
@@ -43,7 +31,8 @@ public class AuthProvider {
         return single_instance;
     }
 
-    private AuthProvider() {}
+    private AuthProvider() {
+    }
 
     private AuthenticationDetailsProvider createProvider() {
         try {
@@ -81,42 +70,27 @@ public class AuthProvider {
         return provider;
     }
 
-    public void refreshClients() {
-        // Update Clients
-        new Job("Update") {
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    ObjStorageClient.getInstance().updateClient();
-                    ComputeInstanceClient.getInstance().updateClient();
-                    BlockStorageClient.getInstance().updateClient();
-                    IdentClient.getInstance().updateClient();
-                    Display.getDefault().asyncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            RegionOptions.refreshRegions();
-                            CompartmentOptions.refreshCompartments();
-                            NavigatorDoubleClick.closeAllComputeWindows();
-                            NavigatorDoubleClick.closeAllBucketWindows();
-                        }
-                    });
-
-                    ObjStorageContentProvider.getInstance().getBucketsAndRefresh();
-
-                } catch(Exception e) {
-                    return ErrorHandler.reportException(e.getMessage(), e);
-                }
-                return Status.OK_STATUS;
-            }
-        }.schedule();
+    public void updateCompartmentId(String compartmentId) {
+        ClientUpdateManager.getInstance().getSupportViews().firePropertyChange("currentCompartmentId",
+                this.currentCompartmentId, compartmentId);
+        currentCompartmentId = compartmentId;
     }
 
-    public void updateCompartmentId(String compartmentId) {
+    public void setCompartmentId(String compartmentId) {
         currentCompartmentId = compartmentId;
     }
 
     public String getCompartmentId() {
         return currentCompartmentId;
+    }
+
+    public void updateRegion(String regionId) {
+        PreferencesWrapper.setRegion(regionId);
+        ClientUpdateManager.getInstance().getSupportRegion().firePropertyChange("currentRegionName",
+                this.currentRegionName, regionId);
+        ClientUpdateManager.getInstance().getSupportViews().firePropertyChange("currentRegionName",
+                this.currentRegionName, regionId);
+        currentRegionName = regionId;
     }
 
     public Region getRegion() {

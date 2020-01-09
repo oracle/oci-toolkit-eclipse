@@ -34,11 +34,6 @@ public class ComputeInstanceClientTest {
     }
 
     @Test
-    public void testUpdateClientRegion() throws Exception {
-        ComputeInstanceClient.getInstance().updateClient();
-    }
-
-    @Test
     public void testGetComputeInstances() throws Exception {
         ComputeInstanceClient testSubject = createTestSubject();
         List<Instance> instances = testSubject.getComputeInstances();

@@ -14,7 +14,17 @@ public enum Icons {
     REGION_US("icons/regions/us-orb.png"),
     REGION_GERMANY("icons/regions/germany-orb.png"),
     REGION_UK("icons/regions/uk-orb.png"),
-	REGION_CANADA("icons/regions/canada-flag.png");
+    REGION_CANADA("icons/regions/canada-flag.png"),
+    REGION_INDIA("icons/regions/india-flag.png"),
+    REGION_JAPAN("icons/regions/japan-flag.png"),
+    REGION_SOUTH_KOREA("icons/regions/south-korea-flag.png"),
+    REGION_SWITZERLAND("icons/regions/switzerland-flag.png"),
+    DATABASE("icons/database.png"),
+    DATABASE_AVAILABLE_STATE("icons/db-available-state.png"),
+    DATABASE_INPROGRESS_STATE("icons/db-inprogress-state.png"),
+    DATABASE_UNAVAILABLE_STATE("icons/db-unavailable-state.png"),
+    BACKUP_ACTIVE_STATE("icons/backup-active-state.png"),
+    CONTAINER("icons/compute.png");
 
     private String path;
 

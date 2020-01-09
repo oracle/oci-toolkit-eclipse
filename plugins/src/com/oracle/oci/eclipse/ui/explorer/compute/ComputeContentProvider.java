@@ -3,26 +3,11 @@
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.ui.explorer.compute;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
-import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.Viewer;
-
 import com.oracle.oci.eclipse.ui.explorer.RootElement;
+import com.oracle.oci.eclipse.ui.explorer.common.BaseContentProvider;
 
-public class ComputeContentProvider implements ITreeContentProvider, IResourceChangeListener
+public class ComputeContentProvider extends BaseContentProvider
 {
-    private static ComputeContentProvider instance;
-    private TreeViewer treeViewer;
-
-    public ComputeContentProvider() {
-        instance = this;
-    }
-    public static ComputeContentProvider getInstance() {
-        return instance;
-    }
-
     @Override
     public Object[] getChildren(Object parentElement)
     {
@@ -39,37 +24,8 @@ public class ComputeContentProvider implements ITreeContentProvider, IResourceCh
     }
 
     @Override
-    public Object getParent(Object element)
-    {
-        return null;
-    }
-
-    @Override
     public boolean hasChildren(Object element)
     {
         return (element instanceof RootElement || element instanceof ComputeRootElement);
-    }
-
-    @Override
-    public Object[] getElements(Object inputElement)
-    {
-        return getChildren(inputElement);
-    }
-
-    @Override
-    public void dispose()
-    {
-    }
-
-    @Override
-    public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
-    {
-        this.treeViewer = (TreeViewer) viewer;
-    }
-
-    @Override
-    public void resourceChanged(IResourceChangeEvent event) {
-        // TODO Auto-generated method stub
-
     }
 }

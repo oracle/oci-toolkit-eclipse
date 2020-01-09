@@ -31,7 +31,7 @@ public class ComputeLabelProvider extends LabelProvider implements ILabelProvide
     public String getDescription(Object element)
     {
         String text = getText(element);
-        return "Double click to open Compute Instances";
+        return "Double click to open " + text;
     }
 
     @Override

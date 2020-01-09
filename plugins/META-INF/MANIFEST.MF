@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Vendor: Oracle
 Bundle-Name: Oracle Cloud Infrastructure Toolkit
 Bundle-SymbolicName: com.oracle.oci.eclipse.plugin;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.1.0.qualifier
 Bundle-Activator: com.oracle.oci.eclipse.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -13,12 +13,13 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide,
  org.eclipse.swt,
  org.eclipse.core.expressions,
- org.eclipse.jface
+ org.eclipse.jface,
+ org.eclipse.datatools.connectivity;resolution:=optional,
+ org.eclipse.datatools.connectivity.ui;resolution:=optional,
+ org.eclipse.datatools.connectivity.ui.dse;resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.3.5.jar,
- lib/sdk/oci-java-sdk-full-1.3.5-javadoc.jar,
- lib/sdk/oci-java-sdk-full-1.3.5-sources.jar,
+Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.9.4.jar,
  lib/thirdparty/commons-lang3-3.8.1.jar,
  lib/thirdparty/commons-io-2.6.jar,
  lib/thirdparty/commons-codec-1.11.jar,
