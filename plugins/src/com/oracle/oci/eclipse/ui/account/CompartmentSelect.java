@@ -41,9 +41,10 @@ public class CompartmentSelect extends AbstractHandler implements IElementUpdate
         ErrorHandler.logInfo("Changed compartment to: "+compartment);
         AuthProvider.getInstance().updateCompartmentId(compartment);
 
+        // Must refresh buckets and close open bucket windows
         ObjStorageContentProvider.getInstance().getBucketsAndRefresh();
         NavigatorDoubleClick.closeAllBucketWindows();
-        NavigatorDoubleClick.closeAllComputeWindows();
+
         HandlerUtil.updateRadioState(event.getCommand(), compartment);
         return null;
     }

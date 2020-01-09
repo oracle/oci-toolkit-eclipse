@@ -39,6 +39,10 @@ public class RegionOptions extends CompoundContributionItem {
             put("eu-frankfurt-1", Icons.REGION_GERMANY.getPath());
             put("uk-london-1", Icons.REGION_UK.getPath());
             put("ca-toronto-1", Icons.REGION_CANADA.getPath());
+            put("ap-mumbai-1", Icons.REGION_INDIA.getPath());
+            put("ap-seoul-1", Icons.REGION_SOUTH_KOREA.getPath());
+            put("ap-tokyo-1", Icons.REGION_JAPAN.getPath());
+            put("eu-zurich-1", Icons.REGION_SWITZERLAND.getPath());
         }
     };
 

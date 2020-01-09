@@ -2,11 +2,65 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
    <artifactId>com.oracle.oci.eclipse.feature</artifactId>
-   <version>1.0.0-SNAPSHOT</version>
+   <version>1.1.0-SNAPSHOT</version>
    <packaging>eclipse-feature</packaging>
    <parent>
     <groupId>com.oracle.oci.eclipse</groupId>
     <artifactId>com.oracle.oci.eclipse.root</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
   </parent>
+  <!-- START: Delete Public GitHub -->
+  <profiles>
+    <profile>
+      <id>sign</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>compile</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                 <configuration>
+                  <tasks>
+                    <!-- Delete the oracle.pem file if it's there, otherwise the 'publickey'
+                                 goal below will go interactive and ask Y/N to overwrite. -->
+                    <delete failonerror="false" file="./oracle.pem" />
+                    <delete failonerror="false" file="${project.parent.basedir}/oracle.pem" />
+                  </tasks>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.oracle.ccss</groupId>
+            <artifactId>codesign-maven-plugin</artifactId>
+            <version>3.3</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>publickey</goal>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <downloadLocation>target/</downloadLocation>
+              <certType>java</certType>
+              <certFormat>pem</certFormat>
+              <user>oci_dex_tools_grp</user>
+              <globalUID>pritpate</globalUID>
+              <fileToSign>${project.build.directory}/com.oracle.oci.eclipse.feature-1.1.0-SNAPSHOT.jar</fileToSign>
+              <signLocation>${project.build.directory}</signLocation>
+              <signMethod>java2</signMethod>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+   </profiles>
+   <!-- END: Delete Public GitHub -->
 </project>

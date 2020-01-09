@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.eclipse.sdkclients;
 
+import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,7 @@ import com.oracle.bmc.core.responses.ListInstancesResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
 
-public class ComputeInstanceClient {
+public class ComputeInstanceClient extends BaseClient {
 
     private static ComputeInstanceClient single_instance = null;
     private static ComputeClient computeClient;
@@ -45,16 +46,15 @@ public class ComputeInstanceClient {
         return single_instance;
     }
 
-    public void updateClient() {
-        close();
-        createComputeInstanceClient();
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        computeClient.setRegion(evt.getNewValue().toString());
+        vcnClient.setRegion(evt.getNewValue().toString());
     }
 
     private ComputeClient createComputeInstanceClient(){
         computeClient = new ComputeClient(AuthProvider.getInstance().getProvider());
         computeClient.setRegion(AuthProvider.getInstance().getRegion());
-        vcnClient = new VirtualNetworkClient(AuthProvider.getInstance().getProvider());
-        vcnClient.setRegion(AuthProvider.getInstance().getRegion());
         return computeClient;
     }
 
@@ -64,21 +64,26 @@ public class ComputeInstanceClient {
         return vcnClient;
     }
 
+    @Override
+    public void updateClient() {
+        close();
+        createComputeInstanceClient();
+        createVCNInstanceClient();
+    }
+
+    @Override
     public void close() {
         try {
-            if (computeClient != null && vcnClient != null) {
+            if (computeClient != null) {
                 computeClient.close();
+            }
+            if (vcnClient != null) {
                 vcnClient.close();
             }
         } catch (Exception e) {
             ErrorHandler.logErrorStack(e.getMessage(), e);
         }
-    }
 
-    @Override
-    public void finalize() throws Throwable{
-        computeClient.close();
-        single_instance = null;
     }
 
 

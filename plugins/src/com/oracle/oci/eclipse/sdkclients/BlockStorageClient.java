@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.eclipse.sdkclients;
 
+import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
 
-public class BlockStorageClient {
+public class BlockStorageClient extends BaseClient {
 
     private static BlockStorageClient single_instance = null;
     private static BlockstorageClient blockStorageClient;
@@ -34,17 +35,6 @@ public class BlockStorageClient {
         return single_instance;
     }
 
-    public void updateClient() {
-        try {
-            if (blockStorageClient != null) {
-                blockStorageClient.close();
-            }
-            createBlockStorageClient();
-        } catch (Exception e) {
-            ErrorHandler.logErrorStack(e.getMessage(), e);
-        }
-    }
-
     private BlockstorageClient createBlockStorageClient(){
         blockStorageClient = new BlockstorageClient(AuthProvider.getInstance().getProvider());
         blockStorageClient.setRegion(AuthProvider.getInstance().getRegion());
@@ -52,9 +42,24 @@ public class BlockStorageClient {
     }
 
     @Override
-    public void finalize() throws Throwable{
-        blockStorageClient.close();
-        single_instance = null;
+    public void propertyChange(PropertyChangeEvent evt) {
+        blockStorageClient.setRegion(evt.getNewValue().toString());
+    }
+
+    @Override
+    public void updateClient() {
+        close();
+        createBlockStorageClient();
+    }
+    @Override
+    public void close() {
+        try {
+            if (blockStorageClient != null) {
+                blockStorageClient.close();
+            }
+        } catch (Exception e) {
+            ErrorHandler.logErrorStack(e.getMessage(), e);
+        }
     }
 
     public List<Volume> getVolumes() throws Exception {

@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.eclipse.sdkclients;
 
+import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +23,7 @@ import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
 
-public class IdentClient {
+public class IdentClient extends BaseClient {
 
     private static IdentClient single_instance = null;
     private static IdentityClient identityClient;
@@ -42,12 +43,23 @@ public class IdentClient {
         return single_instance;
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        identityClient.setRegion(evt.getNewValue().toString());
+    }
+
+    @Override
     public void updateClient() {
+        close();
+        createIdentityClient();
+    }
+
+    @Override
+    public void close() {
         try {
             if (identityClient != null) {
                 identityClient.close();
             }
-            createIdentityClient();
         } catch (Exception e) {
             ErrorHandler.logErrorStack(e.getMessage(), e);
         }
@@ -86,7 +98,9 @@ public class IdentClient {
                                 ListCompartmentsRequest.builder()
                                 .limit(10)
                                 .compartmentId(compartmentId)
+                                .compartmentIdInSubtree(Boolean.TRUE)
                                 .page(nextPageToken)
+                                .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
                                 .build());
                 if (response != null) {
                     compartmentList.addAll(response.getItems());

@@ -21,6 +21,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -228,6 +230,17 @@ public class ConfigurationElementsUI {
                 configFileText.setText(handleBrowse(innerTopContainer.getShell(), configFileText.getText(), null));
             }
         });
+        
+        new Label(innerTopContainer, SWT.NULL).setText("");
+        /* Link to configuration file creation help page */
+        Link configLink = new Link(innerTopContainer, SWT.NONE);
+        configLink.setText("Click <a href=\"https://docs.cloud.oracle.com/iaas/Content/API/Concepts/sdkconfig.htm\">here</a> to see the instructions to create OCI configuration file.");
+        configLink.addSelectionListener(new SelectionAdapter()  {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                Program.launch("https://docs.cloud.oracle.com/iaas/Content/API/Concepts/sdkconfig.htm");
+            }
+        });
 
         /* Middle Section */
         group = new Group(topLevelContainer, SWT.SHADOW_ETCHED_IN);
@@ -410,6 +423,16 @@ public class ConfigurationElementsUI {
         label = new Label(footerContainer, SWT.NULL);
         label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         label.setText("");
+        
+        /* Create a hyper-link to sign-up for Oracle Cloud*/
+        Link link = new Link(topLevelContainer, SWT.NONE);
+        link.setText("Don't have an account? Sign up for the <a href=\"https://www.oracle.com/cloud/free/\">Oracle Cloud Free Tier</a>");
+        link.addSelectionListener(new SelectionAdapter()  {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                Program.launch("https://www.oracle.com/cloud/free/");
+            }
+        });
 
         configFileChanged(topLevelContainer.getShell());
         return innerContainer;

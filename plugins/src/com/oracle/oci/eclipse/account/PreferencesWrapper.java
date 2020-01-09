@@ -12,7 +12,7 @@ public class PreferencesWrapper {
 
     private final static String PREFERENCES_LOCATION = "oci-ide-prefs";
     private static Preferences systemPrefs = Preferences.userRoot().node(PREFERENCES_LOCATION);
-    private final static String VERSION = "1.0.0";
+    private final static String VERSION = "1.1.0";
 
     public static void setRegion(String regionId) {
         systemPrefs.put("region", regionId);

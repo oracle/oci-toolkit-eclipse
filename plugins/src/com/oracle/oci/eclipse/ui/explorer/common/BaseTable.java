@@ -21,12 +21,14 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import com.oracle.oci.eclipse.account.AuthProvider;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.sdkclients.IdentClient;
 
 public abstract class BaseTable extends Composite {
@@ -43,6 +45,9 @@ public abstract class BaseTable extends Composite {
     protected abstract List<?> getTableCachedData();
     protected abstract int getTableDataSize();
     protected void addTableLabels(FormToolkit toolkit, Composite left, Composite right) {}
+    Label profileLabel;
+    Label compartmentLabel;
+    Label regionLabel;
 
     protected void createTable() {
         FormToolkit toolkit = new FormToolkit(Display.getDefault());
@@ -66,9 +71,12 @@ public abstract class BaseTable extends Composite {
         right.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
         right.setLayout(new GridLayout(1, true));
 
-        toolkit.createLabel(left, "Compartment: " + IdentClient.getInstance().getCurrentCompartmentName());
-        toolkit.createLabel(left, "Region: " + AuthProvider.getInstance().getRegion().toString());
+        profileLabel = new Label(left, SWT.NONE);
+        compartmentLabel = new Label(left, SWT.NONE);
+        regionLabel = new Label(left, SWT.NONE);
+        updateTableLabels();
         addTableLabels(toolkit, left, right);
+
 
         Composite tableHolder = toolkit.createComposite(sectionComp, SWT.None);
         tableHolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
@@ -89,10 +97,16 @@ public abstract class BaseTable extends Composite {
         viewer.setContentProvider(new TableContentProvider(viewer));
 
         createColumns(tableColumnLayout, viewer.getTable());
-
         hookMenu();
     }
 
+
+    private void updateTableLabels() {
+        profileLabel.setText("Profile: " + PreferencesWrapper.getProfile());
+        compartmentLabel.setText("Compartment: " + IdentClient.getInstance().getCurrentCompartmentName());
+        regionLabel.setText("Region: " + AuthProvider.getInstance().getRegion().toString());
+        compartmentLabel.getParent().requestLayout();
+    }
 
     private void hookMenu() {
         MenuManager menuManager = new MenuManager("#PopupMenu");
@@ -118,16 +132,19 @@ public abstract class BaseTable extends Composite {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                viewer.getTable().deselectAll();
-                if (updateFromCloud) {
-                    // Get the new list from cloud
-                    viewer.setInput(getTableData());
-                } else {
-                    viewer.setInput(getTableCachedData());
+                if (!viewer.getTable().isDisposed()) {
+                    viewer.getTable().deselectAll();
+                    if (updateFromCloud) {
+                        // Get the new list from cloud
+                        viewer.setInput(getTableData());
+                    } else {
+                        viewer.setInput(getTableCachedData());
+                    }
+                    viewer.setItemCount(getTableDataSize());
+                    viewer.refresh();
+                    updateTableLabels();
+                    viewer.getTable().layout();
                 }
-                viewer.setItemCount(getTableDataSize());
-                viewer.refresh();
-                viewer.getTable().update();
             }
         });
     }

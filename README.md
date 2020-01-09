@@ -3,7 +3,8 @@
 ## About
 
 The Oracle Cloud Infrastructure Toolkit for Eclipse is an open source plug-in for the Eclipse Integrated Development Environment (IDE) maintained by Oracle Corp.
-The toolkit supports the Compute and Object Storage services. Users can easily upload/download multiple files, or start and restart the instances from Eclipse. 
+The toolkit supports the Compute, Object Storage, Oracle Container Engine for Kubernetes and Autonomous Database services. Users can easily upload/download multiple files, or start and restart the Compute instances from Eclipse. With Autonomous Database service support, users can create ATP/ADW instances, start/stop, terminate, clone, update licence type, change admin password, scale up/down, download client credentials (wallet) and create connection to their Autonomous Databases.
+Once the connection is created to the Autonomous Database, users can browse through schema and tables.
 It also supports switching between multiple accounts and regions.
 
 ## Home page 

@@ -120,12 +120,12 @@ public class ConfigurationWizard extends Wizard implements INewWizard {
         } catch (IOException e1) {
             ErrorHandler.logError("ConfigFileReader parse error:" + e1.getMessage());
         }
-        PreferencesWrapper.setRegion(config.get("region"));
-        AuthProvider.getInstance().updateCompartmentId(config.get("tenancy"));
 
-        ObjStorageClient.getInstance().updateClient();
+        PreferencesWrapper.setRegion(config.get("region"));
+        AuthProvider.getInstance().setCompartmentId(config.get("tenancy"));
+
         ObjStorageClient.getInstance().getNamespace();
-        AuthProvider.getInstance().refreshClients();
+        ClientUpdateManager.getInstance().refreshClients();
 
         monitor.worked(1);
     }

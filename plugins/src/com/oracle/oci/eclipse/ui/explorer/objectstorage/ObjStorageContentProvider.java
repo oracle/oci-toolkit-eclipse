@@ -6,13 +6,10 @@ package com.oracle.oci.eclipse.ui.explorer.objectstorage;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
@@ -21,9 +18,10 @@ import com.oracle.bmc.objectstorage.model.BucketSummary;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.sdkclients.ObjStorageClient;
 import com.oracle.oci.eclipse.ui.explorer.RootElement;
+import com.oracle.oci.eclipse.ui.explorer.common.BaseContentProvider;
 
 
-public class ObjStorageContentProvider implements ITreeContentProvider, IResourceChangeListener
+public class ObjStorageContentProvider extends BaseContentProvider
 {
     private static ObjStorageContentProvider instance;
     private TreeViewer treeViewer;
@@ -33,6 +31,13 @@ public class ObjStorageContentProvider implements ITreeContentProvider, IResourc
 
     public ObjStorageContentProvider() {
         instance = this;
+    }
+
+    public static ObjStorageContentProvider getInstance() {
+        if (instance == null) {
+            instance = new ObjStorageContentProvider();
+        }
+        return instance;
     }
 
     public void getBucketsAndRefresh() {
@@ -57,14 +62,9 @@ public class ObjStorageContentProvider implements ITreeContentProvider, IResourc
         }.schedule();
     }
 
-    public static ObjStorageContentProvider getInstance() {
-        return instance;
-    }
-
     @Override
     public Object[] getChildren(Object parentElement)
     {
-
         if (parentElement instanceof RootElement)
         {
             return new Object[] {new StorageRootElement()};
@@ -86,36 +86,15 @@ public class ObjStorageContentProvider implements ITreeContentProvider, IResourc
     }
 
     @Override
-    public Object getParent(Object element)
-    {
-        return null;
-    }
-
-    @Override
     public boolean hasChildren(Object element)
     {
         return (element instanceof RootElement || element instanceof StorageRootElement);
     }
 
     @Override
-    public Object[] getElements(Object inputElement)
-    {
-        return getChildren(inputElement);
-    }
-
-    @Override
-    public void dispose()
-    {
-    }
-
-    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
     {
         this.treeViewer = (TreeViewer) viewer;
-    }
-
-    @Override
-    public void resourceChanged(IResourceChangeEvent event) {
     }
 
     public synchronized void refresh() {
