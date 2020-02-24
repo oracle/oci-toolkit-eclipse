@@ -1,22 +1,35 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.sdkclients;
 
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.identity.IdentityClient;
+import com.oracle.bmc.identity.model.AuthToken;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.Compartment.LifecycleState;
+import com.oracle.bmc.identity.model.CreateAuthTokenDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
+import com.oracle.bmc.identity.model.Tenancy;
+import com.oracle.bmc.identity.model.User;
+import com.oracle.bmc.identity.requests.CreateAuthTokenRequest;
+import com.oracle.bmc.identity.requests.GetTenancyRequest;
+import com.oracle.bmc.identity.requests.GetUserRequest;
 import com.oracle.bmc.identity.requests.ListAvailabilityDomainsRequest;
 import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
 import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
+import com.oracle.bmc.identity.responses.CreateAuthTokenResponse;
+import com.oracle.bmc.identity.responses.GetTenancyResponse;
+import com.oracle.bmc.identity.responses.GetUserResponse;
 import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
@@ -27,8 +40,7 @@ public class IdentClient extends BaseClient {
 
     private static IdentClient single_instance = null;
     private static IdentityClient identityClient;
-    private List<Compartment> compartmentList = new ArrayList<Compartment>();
-    private final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
+    private static Tenancy tenancyInfo = null;
 
     private IdentClient() {
         if (identityClient == null) {
@@ -78,49 +90,38 @@ public class IdentClient extends BaseClient {
         single_instance = null;
     }
 
-    public List<Compartment> getCompartmentList() {
-        String nextPageToken = null;
-        String compartmentId = AuthProvider.getInstance().getProvider().getTenantId();
-        compartmentList.clear();
+    public List<Compartment> getCompartmentList(Compartment compartment) {
+        List<Compartment> compartmentList = new ArrayList<Compartment>();
 
-        Compartment rootComp = Compartment.builder()
-                .compartmentId(compartmentId)
-                .id(compartmentId)
-                .name(ROOT_COMPARTMENT_NAME)
-                .lifecycleState(LifecycleState.Active)
-                .build();
-        compartmentList.add(rootComp);
-
-        do {
-            try {
-                ListCompartmentsResponse response =
-                        identityClient.listCompartments(
-                                ListCompartmentsRequest.builder()
-                                .limit(10)
-                                .compartmentId(compartmentId)
-                                .compartmentIdInSubtree(Boolean.TRUE)
-                                .page(nextPageToken)
-                                .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
-                                .build());
-                if (response != null) {
-                    compartmentList.addAll(response.getItems());
-                    nextPageToken = response.getOpcNextPage();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        try {
+            ListCompartmentsResponse response = identityClient
+                    .listCompartments(ListCompartmentsRequest.builder().compartmentId(compartment.getId())
+                            .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible).build());
+            if (response != null) {
+                compartmentList = response.getItems()
+                        .stream()
+                        .filter(predicate -> !predicate.getLifecycleState().equals(LifecycleState.Deleted))
+                        .filter(predicate -> !predicate.getLifecycleState().equals(LifecycleState.Deleting))
+                        .sorted(Comparator.comparing(Compartment::getName))
+                        .collect(Collectors.toList());
             }
-        } while (nextPageToken != null);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
 
         return compartmentList;
     }
 
-    public String getCurrentCompartmentName() {
-        for(Compartment compartment : compartmentList) {
-            if (compartment.getId().equals(AuthProvider.getInstance().getCompartmentId())) {
-                return compartment.getName();
-            }
-        }
-        return ROOT_COMPARTMENT_NAME;
+    public Compartment getRootCompartment() {
+        String compartmentId = AuthProvider.getInstance().getProvider().getTenantId();
+        Compartment rootComp = Compartment.builder()
+                .compartmentId(compartmentId)
+                .id(compartmentId)
+                .name(AuthProvider.ROOT_COMPARTMENT_NAME)
+                .lifecycleState(LifecycleState.Active)
+                .build();
+        return rootComp;
     }
 
     public List<RegionSubscription> getRegionsList() {
@@ -145,5 +146,41 @@ public class IdentClient extends BaseClient {
             domains = listAvailabilityDomainsResponse.getItems();
 
         return domains;
+    }
+
+    public AuthToken createAuthToken() {
+        // Get the user home region
+        Region homeRegion = Region.fromRegionCode(getTenancy().getHomeRegionKey());
+
+        // We need to set the client to use user home region to be able to create the Auth Token
+        identityClient.setRegion(homeRegion);
+
+        CreateAuthTokenRequest request = CreateAuthTokenRequest.builder()
+                .userId(AuthProvider.getInstance().getProvider().getUserId())
+                .createAuthTokenDetails(CreateAuthTokenDetails.builder().description("Eclipse OKE Token").build()).build();
+        CreateAuthTokenResponse response = identityClient.createAuthToken(request);
+
+        // Switch back region to the one the user selected
+        identityClient.setRegion(AuthProvider.getInstance().getRegion());
+
+        return response.getAuthToken();
+    }
+
+    public Tenancy getTenancy() {
+        if(tenancyInfo == null) {
+            GetTenancyRequest request = GetTenancyRequest.builder()
+                    .tenancyId(AuthProvider.getInstance().getProvider().getTenantId()).build();
+            GetTenancyResponse response = identityClient.getTenancy(request);
+            tenancyInfo = response.getTenancy();
+        }
+        return tenancyInfo;
+    }
+
+    public User getUser() {
+        GetUserRequest request = GetUserRequest.builder()
+                .userId(AuthProvider.getInstance().getProvider().getUserId()).build();
+        GetUserResponse response = identityClient.getUser(request);
+
+        return response.getUser();
     }
 }

@@ -3,10 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## 1.0.0
+## 1.2.0
 ### Added
-- Initial Release
-- Support added for Compute Services, Block Storage Service, Object Storage Service
+- Support for deploying applications on Oracle Container Engine for Kubernetes. 
+  - Upload Docker Images to Oracle Registry (OCIR).
+  - Deploy Docker Images to Oracle Kubernetes Engine (OKE).
 
 ## 1.1.0
 ### Added
@@ -22,3 +23,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - Support for Oracle Container Engine for Kubernetes. Users can view clusters and
 download Kubernetes Config files.
+
+## 1.0.0
+### Added
+- Initial Release
+- Support added for Compute Services, Block Storage Service, Object Storage Service

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse;
@@ -24,7 +24,8 @@ public enum Icons {
     DATABASE_INPROGRESS_STATE("icons/db-inprogress-state.png"),
     DATABASE_UNAVAILABLE_STATE("icons/db-unavailable-state.png"),
     BACKUP_ACTIVE_STATE("icons/backup-active-state.png"),
-    CONTAINER("icons/compute.png");
+    COMPARTMENT("icons/compartments.png"),
+    KUBERNETES_ENGINE("icons/oke.png");
 
     private String path;
 

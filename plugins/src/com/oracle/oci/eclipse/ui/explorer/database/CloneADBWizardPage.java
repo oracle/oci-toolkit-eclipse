@@ -1,10 +1,15 @@
+/**
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
+import java.util.function.Consumer;
 
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -13,7 +18,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
@@ -24,6 +28,10 @@ import org.eclipse.swt.widgets.Text;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.LicenseModel;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails.CloneType;
+import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.oci.eclipse.sdkclients.IdentClient;
+import com.oracle.oci.eclipse.ui.account.CompartmentSelectWizard;
+import com.oracle.oci.eclipse.ui.explorer.common.CustomWizardDialog;
 
 public class CloneADBWizardPage  extends WizardPage {
 	private Group cloneTypeGroup;
@@ -32,7 +40,7 @@ public class CloneADBWizardPage  extends WizardPage {
 	private Text originDBNameText;
     private Text displayNameText;
     private Text databaseNameText;
-    private Combo compartmentList;
+    private Text compartmentText;
     private Label alwaysFreeLabel;
 	private Button alwaysFreeCheckButton;
     private Spinner cpuCoreCountSpinner;
@@ -47,16 +55,16 @@ public class CloneADBWizardPage  extends WizardPage {
     private Button licenseTypeOwnRadioButton;
     private Button licenseTypeIncludedRadioButton;
     private ISelection selection;
-    private Map<String, String> compartmentMap;
     AutonomousDatabaseSummary sourceInstance;
+    private Compartment selectedCompartment;
 
-    public CloneADBWizardPage(ISelection selection, Map<String, String> compartmentMap, AutonomousDatabaseSummary sourceInstance) {
+    public CloneADBWizardPage(ISelection selection, AutonomousDatabaseSummary sourceInstance) {
         super("wizardPage");
         setTitle("Create Autonomous Database Clone");
         setDescription("This wizard clones an ADB instance. Please enter the required details.");
         this.selection = selection;
-        this.compartmentMap = compartmentMap;
         this.sourceInstance = sourceInstance;
+        this.selectedCompartment = IdentClient.getInstance().getRootCompartment();
     }
 
     @Override
@@ -83,13 +91,25 @@ public class CloneADBWizardPage  extends WizardPage {
         
         Label compartmentLabel = new Label(container, SWT.NULL);
         compartmentLabel.setText("&Create in compartment:");
-        compartmentList = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY);
-        GridData gd0 = new GridData(GridData.FILL_HORIZONTAL);
-        compartmentList.setLayoutData(gd0);
-        for (String compartmentName: compartmentMap.keySet()) {
-        	compartmentList.add(compartmentName);
-		}
-        compartmentList.select(0);
+        Composite innerTopContainer = new Composite(container, SWT.NONE);
+        GridLayout innerTopLayout = new GridLayout();
+        innerTopLayout.numColumns = 2;
+        innerTopContainer.setLayout(innerTopLayout);
+        innerTopContainer.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        compartmentText = new Text(innerTopContainer, SWT.BORDER | SWT.SINGLE);
+        compartmentText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        compartmentText.setEditable(false);
+        compartmentText.setText(selectedCompartment.getName());
+
+        Button compartmentButton = new Button(innerTopContainer, SWT.PUSH);
+        compartmentButton.setText("Choose...");
+        compartmentButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	handleSelectCompartmentEvent();
+            }
+        });
         
         final String originDBName = sourceInstance.getDisplayName();
         Label originDBNameLabel = new Label(container, SWT.NULL);
@@ -251,6 +271,23 @@ public class CloneADBWizardPage  extends WizardPage {
         // default value
         storageInTBSpinner.setSelection(ADBConstants.STORAGE_IN_TB_DEFAULT);
     }
+    
+    private void handleSelectCompartmentEvent() {
+    	Consumer<Compartment> consumer=new Consumer<Compartment>() {
+			@Override
+			public void accept(Compartment compartment) {
+				if (compartment != null) {
+					selectedCompartment = compartment;
+					compartmentText.setText(selectedCompartment.getName());
+				}
+			}
+		};
+    	CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
+				new CompartmentSelectWizard(consumer, false));
+		dialog.setFinishButtonText("Select");
+		if (Window.OK == dialog.open()) {
+		}
+    }
 
     private void updateStatus(String message) {
         setErrorMessage(message);
@@ -295,8 +332,8 @@ public class CloneADBWizardPage  extends WizardPage {
 		return storageInTBSpinner.getText();
 	}
 	
-	public String getSelectedCompartment() {
-		return compartmentList.getText();
+	public String getSelectedCompartmentId() {
+		return selectedCompartment.getId();
 	}
 	
 	public CloneType getCloneType() {

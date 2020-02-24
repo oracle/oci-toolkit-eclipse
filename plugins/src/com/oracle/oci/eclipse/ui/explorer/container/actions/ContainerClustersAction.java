@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.eclipse.ui.explorer.container.actions;
 
 import java.io.File;
@@ -25,23 +29,29 @@ public class ContainerClustersAction extends BaseAction {
 
     private final ContainerClustersTable table;
     private final List<ClusterSummary> clusterSelectionList;
+    private final String action;
+
     String fullFilePath = null;
     String downloadPath = null;
     String fileName = null;
     ClusterSummary object = null;
 
+    Boolean override = false;
+
     // Dialog text
     String message = "File already exists. Do you want to replace it?";
     String title = "Confirm File Replace";
 
-    public ContainerClustersAction (ContainerClustersTable table, String action){
+    public ContainerClustersAction (ContainerClustersTable table, String action, Boolean override){
         this.table = table;
+        this.action = action;
+        this.override = override;
         this.clusterSelectionList = (List<ClusterSummary>)table.getSelectedObjects();
     }
 
     @Override
     public String getText() {
-        return "Download config";
+        return action;
     }
 
     public static final String DEFAULT_KUBE_CONFIG_FOLDER_PATH = ".kube";
@@ -57,15 +67,18 @@ public class ContainerClustersAction extends BaseAction {
             // Download selected cluster, the dialog can change the download fileName.
             if ( clusterSelectionList.size() >= 1 ){
                 object = clusterSelectionList.get(0);
-                FileDialog dialog = new FileDialog ( Display.getDefault().getActiveShell(), SWT.SAVE );
-                dialog.setFilterPath(getKubeConfigFilePath());
-                dialog.setFileName("config");
-                String result = dialog.open();
-                if (result == null) {
-                    return;
+                String pathResult = getKubeConfigFilePath() + File.separator + "config";
+                if(!override) {
+                    FileDialog dialog = new FileDialog ( Display.getDefault().getActiveShell(), SWT.SAVE );
+                    dialog.setFilterPath(getKubeConfigFilePath());
+                    dialog.setFileName("config");
+                    pathResult = dialog.open();
+                    if (pathResult == null) {
+                        return;
+                    }
                 }
-                File file = new File(result);
-                if (file.exists()) {
+                File file = new File(pathResult);
+                if (file.exists() && !override) {
                     Dialog confirmDialog =  new MessageDialog(Display.getDefault().getActiveShell(), title , null, message , MessageDialog.WARNING, new String[] {"Yes","No"}, 1);
                     if (confirmDialog.open() != Dialog.OK) {
                         return;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.ui.account;
@@ -123,6 +123,7 @@ public class ConfigurationWizard extends Wizard implements INewWizard {
 
         PreferencesWrapper.setRegion(config.get("region"));
         AuthProvider.getInstance().setCompartmentId(config.get("tenancy"));
+        AuthProvider.getInstance().setCompartmentName(AuthProvider.ROOT_COMPARTMENT_NAME);
 
         ObjStorageClient.getInstance().getNamespace();
         ClientUpdateManager.getInstance().refreshClients();

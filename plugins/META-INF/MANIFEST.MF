@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Vendor: Oracle
 Bundle-Name: Oracle Cloud Infrastructure Toolkit
 Bundle-SymbolicName: com.oracle.oci.eclipse.plugin;singleton:=true
-Bundle-Version: 1.1.0.qualifier
+Bundle-Version: 1.2.0.qualifier
 Bundle-Activator: com.oracle.oci.eclipse.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -16,38 +16,40 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jface,
  org.eclipse.datatools.connectivity;resolution:=optional,
  org.eclipse.datatools.connectivity.ui;resolution:=optional,
- org.eclipse.datatools.connectivity.ui.dse;resolution:=optional
+ org.eclipse.datatools.connectivity.ui.dse;resolution:=optional,
+ org.eclipse.equinox.security,
+ org.eclipse.osgi
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.9.4.jar,
+Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.13.0.jar,
  lib/thirdparty/commons-lang3-3.8.1.jar,
  lib/thirdparty/commons-io-2.6.jar,
- lib/thirdparty/commons-codec-1.11.jar,
- lib/thirdparty/guava-26.0-android.jar,
+ lib/thirdparty/commons-codec-1.13.jar,
+ lib/thirdparty/guava-27.1-jre.jar,
  lib/thirdparty/json-smart-2.3.jar,
  lib/thirdparty/jersey-client-2.27.jar,
  lib/thirdparty/jersey-common-2.27.jar,
  lib/thirdparty/jersey-entity-filtering-2.27.jar,
  lib/thirdparty/jersey-media-json-jackson-2.27.jar,
  lib/thirdparty/jersey-hk2-2.27.jar,
- lib/thirdparty/slf4j-api-1.7.25.jar,
+ lib/thirdparty/slf4j-api-1.7.26.jar,
  lib/thirdparty/aopalliance-repackaged-2.5.0-b42.jar,
  lib/thirdparty/bcpkix-jdk15on-1.60.jar,
  lib/thirdparty/bcprov-jdk15on-1.60.jar,
  lib/thirdparty/hk2-api-2.5.0-b42.jar,
  lib/thirdparty/hk2-locator-2.5.0-b42.jar,
  lib/thirdparty/hk2-utils-2.5.0-b42.jar,
- lib/thirdparty/jackson-annotations-2.9.8.jar,
- lib/thirdparty/jackson-core-2.9.8.jar,
- lib/thirdparty/jackson-databind-2.9.8.jar,
- lib/thirdparty/jackson-datatype-jdk8-2.9.8.jar,
- lib/thirdparty/jackson-datatype-jsr310-2.9.8.jar,
- lib/thirdparty/jackson-module-jaxb-annotations-2.9.8.jar,
+ lib/thirdparty/jackson-annotations-2.10.1.jar,
+ lib/thirdparty/jackson-core-2.10.1.jar,
+ lib/thirdparty/jackson-databind-2.10.1.jar,
+ lib/thirdparty/jackson-datatype-jdk8-2.10.1.jar,
+ lib/thirdparty/jackson-datatype-jsr310-2.10.1.jar,
+ lib/thirdparty/jackson-module-jaxb-annotations-2.8.10.jar,
  lib/thirdparty/javassist-3.24.0-GA.jar,
  lib/thirdparty/javax.annotation-api-1.2.jar,
  lib/thirdparty/javax.inject-2.5.0-b42.jar,
  lib/thirdparty/javax.ws.rs-api-2.1.jar,
- lib/thirdparty/nimbus-jose-jwt-6.5.1.jar,
+ lib/thirdparty/nimbus-jose-jwt-8.2.1.jar,s
  lib/thirdparty/validation-api-1.1.0.Final.jar,
  .
 Export-Package: com.oracle.bmc.core.model,
@@ -62,3 +64,4 @@ Export-Package: com.oracle.bmc.core.model,
  com.oracle.oci.eclipse.ui.explorer.common,
  com.oracle.oci.eclipse.ui.explorer.compute,
  com.oracle.oci.eclipse.ui.explorer.objectstorage
+Import-Package: org.eclipse.core.net.proxy
