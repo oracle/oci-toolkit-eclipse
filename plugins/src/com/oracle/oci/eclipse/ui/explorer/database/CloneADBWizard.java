@@ -1,9 +1,10 @@
+/**
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -18,30 +19,23 @@ import org.eclipse.ui.IWorkbenchWizard;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
-import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
-import com.oracle.oci.eclipse.sdkclients.IdentClient;
 
 public class CloneADBWizard extends Wizard implements INewWizard {
 
     private CloneADBWizardPage page;
     private ISelection selection;
-    private Map<String, String> compartmentMap = new LinkedHashMap<String, String>();
     private AutonomousDatabaseSummary instance;
 
 	public CloneADBWizard(final AutonomousDatabaseSummary instance) {
 		super();
-		final List<Compartment> compartments = IdentClient.getInstance().getCompartmentList();
-		for (Compartment c : compartments) {
-			compartmentMap.put(c.getName(), c.getId());
-		}
 		this.instance = instance;
 		setNeedsProgressMonitor(true);
 	}
 
     @Override
     public void addPages() {
-        page = new CloneADBWizardPage(selection, compartmentMap, instance);
+        page = new CloneADBWizardPage(selection, instance);
         addPage(page);
     }
 
@@ -56,7 +50,7 @@ public class CloneADBWizard extends Wizard implements INewWizard {
     	if(!isValidPassword())
     		return false;
     	
-    	final String compartmentId = compartmentMap.get(page.getSelectedCompartment());
+    	final String compartmentId = page.getSelectedCompartmentId();
     	final CreateAutonomousDatabaseDetails.DbWorkload workloadType;
 		if (instance.getDbWorkload() == AutonomousDatabaseSummary.DbWorkload.Dw) {
 			workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Dw;

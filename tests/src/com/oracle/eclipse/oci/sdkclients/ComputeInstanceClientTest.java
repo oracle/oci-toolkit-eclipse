@@ -9,12 +9,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.oracle.bmc.core.model.Instance;
-import com.oracle.bmc.core.model.VnicAttachment;
 import com.oracle.oci.eclipse.sdkclients.ComputeInstanceClient;
 
 import tests.utils.SetupConfig;
 
 public class ComputeInstanceClientTest {
+    // This instance is deleted another test should be added in the future that creates an instance
     String instanceName  = "eclipse-test-instance";
     String instanceID  = "ocid1.instance.oc1.phx.abyhqljrkye6o6rtjluhz5zniddkaxlccpqxmfrwyrzyklpupjkwjr6qknya";
 
@@ -39,7 +39,7 @@ public class ComputeInstanceClientTest {
         List<Instance> instances = testSubject.getComputeInstances();
         assertTrue(instances.size() > 0);
     }
-
+    /*
     @Test
     public void testContainsTestComputeInstances() throws Exception {
         Boolean found = false;
@@ -66,5 +66,5 @@ public class ComputeInstanceClientTest {
         Iterable<VnicAttachment> result = testSubject.listVnicAttachmentsOnInstance(instanceID);
         assertTrue(result.iterator().hasNext());
     }
-
+     */
 }

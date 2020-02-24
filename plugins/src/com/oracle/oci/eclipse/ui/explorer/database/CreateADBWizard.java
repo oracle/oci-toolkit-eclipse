@@ -1,9 +1,10 @@
+/**
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -18,30 +19,23 @@ import org.eclipse.ui.IWorkbenchWizard;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails.Builder;
-import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
-import com.oracle.oci.eclipse.sdkclients.IdentClient;
 
 public class CreateADBWizard  extends Wizard implements INewWizard {
 
     private CreateADBWizardPage page;
     private ISelection selection;
-    private Map<String, String> compartmentMap = new LinkedHashMap<String, String>();
     DbWorkload workloadType;
 
 	public CreateADBWizard(DbWorkload workloadType) {
 		super();
-		final List<Compartment> compartments = IdentClient.getInstance().getCompartmentList();
-		for (Compartment c : compartments) {
-			compartmentMap.put(c.getName(), c.getId());
-		}
 		this.workloadType = workloadType;
 		setNeedsProgressMonitor(true);
 	}
 
     @Override
     public void addPages() {
-        page = new CreateADBWizardPage(selection, compartmentMap, workloadType);
+        page = new CreateADBWizardPage(selection, workloadType);
         addPage(page);
     }
 
@@ -60,7 +54,7 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
     		return false;
     	}
     	
-    	final String compartmentId = compartmentMap.get(page.getADBCompartment());
+    	final String compartmentId = page.getADBCompartmentId();
         
     	Builder createADBRequestBuilder = 
         CreateAutonomousDatabaseDetails.builder()

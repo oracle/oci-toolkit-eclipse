@@ -1,10 +1,11 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.ui.explorer.container.editor;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -23,6 +24,7 @@ import com.oracle.oci.eclipse.sdkclients.ContainerClustersClient;
 import com.oracle.oci.eclipse.ui.explorer.common.BaseTable;
 import com.oracle.oci.eclipse.ui.explorer.common.BaseTableLabelProvider;
 import com.oracle.oci.eclipse.ui.explorer.container.actions.ContainerClustersAction;
+import com.oracle.oci.eclipse.ui.explorer.container.wizard.ContainersWizardLaunch;
 
 public class ContainerClustersTable extends BaseTable {
     private int tableDataSize = 0;
@@ -46,6 +48,12 @@ public class ContainerClustersTable extends BaseTable {
             protected IStatus run(IProgressMonitor monitor) {
                 try {
                     clustersList = ContainerClustersClient.getInstance().listClusters();
+                    for (Iterator<ClusterSummary> it = clustersList.iterator(); it.hasNext(); ) {
+                        ClusterSummary instance = it.next();
+                        if (instance.getLifecycleState().getValue().toLowerCase().equals("deleted")) {
+                            it.remove();
+                        }
+                    }
                     tableDataSize = clustersList.size();
                 } catch (Exception e) {
                     return ErrorHandler.reportException(e.getMessage(), e);
@@ -98,10 +106,12 @@ public class ContainerClustersTable extends BaseTable {
 
     @Override
     protected void fillMenu(IMenuManager manager) {
-        manager.add(new Separator());
+
 
         if (getSelectedObjects().size() > 0) {
-            manager.add(new ContainerClustersAction(ContainerClustersTable.this, "Download Kubernetes Config"));
+            manager.add(new ContainersWizardLaunch(ContainerClustersTable.this, "Deploy Docker Image to OKE"));
+            manager.add(new Separator());
+            manager.add(new ContainerClustersAction(ContainerClustersTable.this, "Download Kubernetes Config", false));
         }
     }
 }

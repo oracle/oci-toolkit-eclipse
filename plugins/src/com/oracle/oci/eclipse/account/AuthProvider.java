@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.account;
@@ -8,12 +8,15 @@ import com.oracle.bmc.ClientRuntime;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
+import com.oracle.bmc.identity.model.AuthToken;
 import com.oracle.oci.eclipse.ErrorHandler;
+import com.oracle.oci.eclipse.sdkclients.IdentClient;
 import com.oracle.oci.eclipse.ui.account.ClientUpdateManager;
 
 
 public class AuthProvider {
 
+	public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
     private static AuthProvider single_instance = null;
 
     private static AuthenticationDetailsProvider provider;
@@ -21,7 +24,7 @@ public class AuthProvider {
     private String currentConfigFileName = PreferencesWrapper.getConfigFileName();
     private String currentRegionName = PreferencesWrapper.getRegion();
     private String currentCompartmentId;
-
+    private String currentCompartmentName = ROOT_COMPARTMENT_NAME;
 
     public static AuthProvider getInstance()
     {
@@ -83,6 +86,14 @@ public class AuthProvider {
     public String getCompartmentId() {
         return currentCompartmentId;
     }
+    
+    public void setCompartmentName(String currentCompartmentName) {
+    	this.currentCompartmentName = currentCompartmentName;
+    }
+
+    public String getCompartmentName() {
+    	return currentCompartmentName;
+    }
 
     public void updateRegion(String regionId) {
         PreferencesWrapper.setRegion(regionId);
@@ -95,6 +106,32 @@ public class AuthProvider {
 
     public Region getRegion() {
         return Region.fromRegionId(currentRegionName);
+    }
+
+    public void deleteAuthToken() {
+        if (!PreferencesWrapper.getAuthToken().isEmpty()) {
+            AuthToken authToken = null;
+            PreferencesWrapper.setAuthToken(authToken);
+        }
+    }
+    public String getAuthToken() {
+        if (PreferencesWrapper.getAuthToken().isEmpty()) {
+            try {
+                AuthToken token = IdentClient.getInstance().createAuthToken();
+                if(token != null) {
+                    PreferencesWrapper.setAuthToken(token);
+                    return token.getToken();
+                } else {
+                    ErrorHandler.logError("Null token!");
+                }
+            } catch (Exception e) {
+                ErrorHandler.reportAndShowException("Failed to get OCI Auth Token. ", e);
+            }
+
+        } else {
+            return PreferencesWrapper.getAuthToken();
+        }
+        return "";
     }
 
     // set the plug-in version into the SDK.

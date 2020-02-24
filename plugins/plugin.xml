@@ -112,7 +112,7 @@
    <extension point="org.eclipse.ui.editors">
       <editor class="com.oracle.oci.eclipse.ui.explorer.container.editor.ContainerClustersEditor"
           default="false"
-          icon="icons/compute-instance.png"
+          icon="icons/oke.png"
           id="com.oracle.oci.eclipse.ui.explorer.container.editor.ContainerClustersEditor"
           name="Clusters" />
    </extension>
@@ -182,8 +182,7 @@
          <command
                commandId="com.oracle.oci.eclipse.commands.selectCompartment"
                icon="icons/compartments.png"
-               label="Compartment Selector"
-               style="pulldown">
+               label="Compartment Selector">
          </command>
       </menuContribution>
       <menuContribution
@@ -197,10 +196,6 @@
       <menuContribution
             allPopups="true"
             locationURI="menu:com.oracle.oci.eclipse.commands.selectCompartment">
-         <dynamic
-               class="com.oracle.oci.eclipse.ui.account.CompartmentOptions"
-               id="menu:com.oracle.oci.eclipse.commands.selectCompartment">
-         </dynamic>
       </menuContribution>
    </extension>
    
@@ -228,15 +223,6 @@
             categoryId="com.oracle.oci.eclipse.commands.category"
             id="com.oracle.oci.eclipse.commands.selectCompartment"
             name="Select Compartment">
-         <commandParameter
-               id="org.eclipse.ui.commands.radioStateParameter"
-               name="Compartment"
-               optional="true">
-         </commandParameter>
-         <state 
-         	class="org.eclipse.ui.handlers.RadioState" 
-         	id="org.eclipse.ui.commands.radioState"> 
-   		 </state> 
       </command>
    </extension>
    

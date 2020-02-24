@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.ui.account;
@@ -230,7 +230,7 @@ public class ConfigurationElementsUI {
                 configFileText.setText(handleBrowse(innerTopContainer.getShell(), configFileText.getText(), null));
             }
         });
-        
+
         new Label(innerTopContainer, SWT.NULL).setText("");
         /* Link to configuration file creation help page */
         Link configLink = new Link(innerTopContainer, SWT.NONE);
@@ -423,7 +423,7 @@ public class ConfigurationElementsUI {
         label = new Label(footerContainer, SWT.NULL);
         label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         label.setText("");
-        
+
         /* Create a hyper-link to sign-up for Oracle Cloud*/
         Link link = new Link(topLevelContainer, SWT.NONE);
         link.setText("Don't have an account? Sign up for the <a href=\"https://www.oracle.com/cloud/free/\">Oracle Cloud Free Tier</a>");

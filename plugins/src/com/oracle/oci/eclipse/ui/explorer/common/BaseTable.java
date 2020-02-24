@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.eclipse.ui.explorer.common;
@@ -29,7 +29,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import com.oracle.oci.eclipse.account.AuthProvider;
 import com.oracle.oci.eclipse.account.PreferencesWrapper;
-import com.oracle.oci.eclipse.sdkclients.IdentClient;
 
 public abstract class BaseTable extends Composite {
     protected TableViewer viewer;
@@ -103,7 +102,7 @@ public abstract class BaseTable extends Composite {
 
     private void updateTableLabels() {
         profileLabel.setText("Profile: " + PreferencesWrapper.getProfile());
-        compartmentLabel.setText("Compartment: " + IdentClient.getInstance().getCurrentCompartmentName());
+        compartmentLabel.setText("Compartment: " + AuthProvider.getInstance().getCompartmentName());
         regionLabel.setText("Region: " + AuthProvider.getInstance().getRegion().toString());
         compartmentLabel.getParent().requestLayout();
     }
