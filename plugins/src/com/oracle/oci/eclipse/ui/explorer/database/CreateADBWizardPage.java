@@ -232,12 +232,14 @@ public class CreateADBWizardPage extends WizardPage {
 			dedicatedDeploymentRadioButton.addSelectionListener(dedicatedListener);
 		}
 		
-		alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
-	        @Override
-	        public void widgetSelected(SelectionEvent event) {
-	        	alwaysFreeButtonSelectionAction(event, container);
-	        }
-	    });
+		if(workloadType != DbWorkload.Ajd) {
+			alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
+		        @Override
+		        public void widgetSelected(SelectionEvent event) {
+		        	alwaysFreeButtonSelectionAction(event, container);
+		        }
+		    });
+		}
 
 		setControl(container);
 	}
@@ -420,6 +422,9 @@ public class CreateADBWizardPage extends WizardPage {
 	}
 	
 	private void createAlwaysFreeControl(Composite container) {
+		if(workloadType == DbWorkload.Ajd)
+	      return;
+		
 		alwaysFreeLabel = new Label(container, SWT.NULL);
 		alwaysFreeLabel.setText("Always Free");
 		alwaysFreeCheckButton = new Button(container, SWT.CHECK);
@@ -461,7 +466,13 @@ public class CreateADBWizardPage extends WizardPage {
 		licenseTypeOwnRadioButton.setText("Bring Your Own License");
 		licenseTypeIncludedRadioButton = new Button(licenseTypeGroup, SWT.RADIO);
 		licenseTypeIncludedRadioButton.setText("License Included");
-		licenseTypeOwnRadioButton.setSelection(true);
+		
+		if(workloadType == DbWorkload.Ajd) {
+			licenseTypeOwnRadioButton.setEnabled(false);
+			licenseTypeIncludedRadioButton.setSelection(true);
+		} else {
+			licenseTypeOwnRadioButton.setSelection(true);
+		}
 	}
 	
 	private void handleSelectADBCompartmentEvent() {
@@ -571,7 +582,8 @@ public class CreateADBWizardPage extends WizardPage {
 	}
 	
 	public boolean isAlwaysFreeInstance() {
-		if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
+		if ((workloadType == DbWorkload.Ajd) || 
+		  (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection())) {
 			return false;
 		}
 		return alwaysFreeCheckButton.getSelection();

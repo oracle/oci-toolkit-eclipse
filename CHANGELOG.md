@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## 1.3.0
+### Added
+- Support for Autonomous JSON Database (AJD) Service.
+- Support for Database Restart and Change Workload Type operation.
+
 ## 1.2.0
 ### Added
 - Support for deploying applications on Oracle Container Engine for Kubernetes. 

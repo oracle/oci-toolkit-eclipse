@@ -53,7 +53,7 @@ public class ConfigureADBConnectionProfile {
 	private static final String ORACLE_NET_KEEPALIVE_VALUE = "true";
 	
 	// use your own JDBC driver instead of using default one.
-	private static final String TARGET_DRIVER_INSTANCE_ID = "DriverDefn.oci.toolkit.driver";
+	static final String TARGET_DRIVER_INSTANCE_ID = "DriverDefn.oci.toolkit.driver";
 	private static final String TARGET_DRIVER_INSTANCE_NAME = "OCI Toolkit Driver";
 	
 	

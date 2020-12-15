@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.eclipse.ErrorHandler;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 
 public class CreateADBConnectionWizardPage extends WizardPage {
 
@@ -94,13 +95,15 @@ public class CreateADBConnectionWizardPage extends WizardPage {
                 walletDirectoryChanged();
             }
         });
-
+        
         Button walletDirButton = new Button(innerContainer, SWT.PUSH);
         walletDirButton.setText("Browse...");
         walletDirButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	walletDirText.setText(handleBrowse(innerContainer.getShell()));
+            	final String walletDirPath = handleBrowse(innerContainer.getShell(), walletDirText.getText());
+            	if(walletDirPath != null)
+            		walletDirText.setText(walletDirPath);
             }
         });
 		
@@ -124,6 +127,15 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 			}
 			aliasList.select(0);
 		}
+		
+		final String configFilePath = PreferencesWrapper.getConfigFileName();
+        if(configFilePath != null) {
+        	final String configFileDirPath = configFilePath.substring(0, configFilePath.lastIndexOf(File.separator));
+        	final String dbWalletDirPath = configFileDirPath + File.separator + "Wallet_" + adbInstance.getDbName();
+        	if(new File(dbWalletDirPath).exists()) {
+        		walletDirText.setText(dbWalletDirPath);
+        	}
+        }
 
 		setControl(innerContainer);
 		
@@ -136,6 +148,9 @@ public class CreateADBConnectionWizardPage extends WizardPage {
     		return tnsEntries;
 		try {
 			String tnsnamesOraFileLoc = walletLocation+File.separator+"tnsnames.ora";
+			if (!(new File(tnsnamesOraFileLoc).exists()))
+				return tnsEntries;
+			
 			List<String> allLines = Files.readAllLines(Paths.get(tnsnamesOraFileLoc));
 			for (String line : allLines) {
 				if(line != null && line.trim().startsWith(dbName.toLowerCase()+"_")) {
@@ -152,8 +167,10 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 		return tnsEntries;
     }
 	
-	private String handleBrowse(Shell shell) {
+	private String handleBrowse(Shell shell, String currentWalletDir) {
     	DirectoryDialog dialog = new DirectoryDialog(shell, SWT.OPEN);
+    	if(currentWalletDir != null && (!currentWalletDir.equals("")))
+    		dialog.setFilterPath(currentWalletDir);
         return dialog.open();
     }
 	
