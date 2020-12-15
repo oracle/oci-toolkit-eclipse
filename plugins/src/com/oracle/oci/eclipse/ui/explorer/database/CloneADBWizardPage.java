@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.LicenseModel;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails.CloneType;
 import com.oracle.bmc.identity.model.Compartment;
@@ -202,7 +203,13 @@ public class CloneADBWizardPage  extends WizardPage {
 				+ "quote (\") character or the username \"admin\".");
         passwordRule1.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
         
-        Label licenseTypeLabel = new Label(container, SWT.NULL);
+        createLicenseTypeControl(container);
+        
+        setControl(container);
+    }
+    
+    private void createLicenseTypeControl(Composite container) {
+    	Label licenseTypeLabel = new Label(container, SWT.NULL);
         licenseTypeLabel.setText("&Choose a license type:");
         licenseTypeGroup = new Group(container, SWT.NONE);
         RowLayout rowLayout1 = new RowLayout(SWT.HORIZONTAL);
@@ -216,8 +223,13 @@ public class CloneADBWizardPage  extends WizardPage {
         licenseTypeIncludedRadioButton.setText("License Included");
         licenseTypeOwnRadioButton.setSelection(true);
         
-        setControl(container);
-    }
+        if(isSourceAjd()) {
+			licenseTypeOwnRadioButton.setEnabled(false);
+			licenseTypeIncludedRadioButton.setSelection(true);
+		} else {
+			licenseTypeOwnRadioButton.setSelection(true);
+		}
+	}
     
     private void alwaysFreeButtonSelectionAction(SelectionEvent event, Composite container) {
         Button btn = (Button) event.getSource();
@@ -346,6 +358,10 @@ public class CloneADBWizardPage  extends WizardPage {
 	
 	public boolean isAlwaysFreeInstance() {
 		return alwaysFreeCheckButton != null && alwaysFreeCheckButton.getSelection();
+	}
+	
+	private boolean isSourceAjd() {
+		return sourceInstance.getDbWorkload() == AutonomousDatabaseSummary.DbWorkload.Ajd;
 	}
 
 }

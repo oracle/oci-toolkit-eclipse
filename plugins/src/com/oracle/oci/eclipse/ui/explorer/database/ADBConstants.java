@@ -30,6 +30,7 @@ public class ADBConstants {
 	
 	public static final String CREATE_ADW_INSTANCE = "Create ADW Instance";
 	public static final String CREATE_ATP_INSTANCE = "Create ATP Instance";
+	public static final String CREATE_AJD_INSTANCE = "Create AJD Instance";
 	public static final String REGISTER_DRIVER = "Register JDBC Driver";
 			
 	public static final String START = "Start";
@@ -44,6 +45,8 @@ public class ADBConstants {
 	public static final String RESTORE = "Restore";
 	public static final String UPGRADE_INSTANCE_TO_PAID = "Upgrade Instance to Paid";
 	public static final String SERVICE_CONSOLE = "Service Console";
+	public static final String CHANGE_WORKLOAD_TYPE = "Change Workload Type";
+	public static final String RESTART = "Restart";
 	
 	private static final Set<String> ACTION_SET = new TreeSet<String>();
 	static {
@@ -59,6 +62,8 @@ public class ADBConstants {
 		ACTION_SET.add(RESTORE);
 		ACTION_SET.add(UPGRADE_INSTANCE_TO_PAID);
 		ACTION_SET.add(SERVICE_CONSOLE);
+		ACTION_SET.add(CHANGE_WORKLOAD_TYPE);
+		ACTION_SET.add(RESTART);
 	}
 	
 	public static Set<String> getSupportedADBActions() {

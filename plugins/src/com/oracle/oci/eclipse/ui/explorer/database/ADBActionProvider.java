@@ -18,6 +18,7 @@ public class ADBActionProvider extends CommonActionProvider{
         IStructuredSelection selection = (IStructuredSelection) getContext().getSelection();
         menu.add(new CreateADBInstanceAction(ADBConstants.CREATE_ADW_INSTANCE, DbWorkload.Dw));
         menu.add(new CreateADBInstanceAction(ADBConstants.CREATE_ATP_INSTANCE, DbWorkload.Oltp));
+        menu.add(new CreateADBInstanceAction(ADBConstants.CREATE_AJD_INSTANCE, DbWorkload.Ajd));
     }
 
 }

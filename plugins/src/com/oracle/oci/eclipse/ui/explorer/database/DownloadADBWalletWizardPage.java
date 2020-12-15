@@ -4,6 +4,8 @@
  */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
+import java.io.File;
+
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -18,6 +20,8 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 
 public class DownloadADBWalletWizardPage extends WizardPage {
 
@@ -57,13 +61,20 @@ public class DownloadADBWalletWizardPage extends WizardPage {
         walletDirectoryPathText = new Text(innerTopContainer, SWT.BORDER | SWT.SINGLE);
         walletDirectoryPathText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         walletDirectoryPathText.setEditable(false);
+        final String configFilePath = PreferencesWrapper.getConfigFileName();
+        if(configFilePath != null) {
+        	final String configFileDirPath = configFilePath.substring(0, configFilePath.lastIndexOf(File.separator));
+        	walletDirectoryPathText.setText(configFileDirPath);
+        }
 
         Button walletDirButton = new Button(innerTopContainer, SWT.PUSH);
         walletDirButton.setText("Browse...");
         walletDirButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-           	 walletDirectoryPathText.setText(handleBrowse(innerTopContainer.getShell()));
+            	final String walletDirPath = handleBrowse(innerTopContainer.getShell(), walletDirectoryPathText.getText());
+            	if(walletDirPath != null)
+            		walletDirectoryPathText.setText(walletDirPath);
             }
         });
         
@@ -100,8 +111,10 @@ public class DownloadADBWalletWizardPage extends WizardPage {
        setControl(innerContainer);
     }
     
-    private String handleBrowse(Shell shell) {
+    private String handleBrowse(Shell shell, String currentWalletDir) {
     	DirectoryDialog dialog = new DirectoryDialog(shell, SWT.OPEN);
+    	if(currentWalletDir != null && (!currentWalletDir.equals("")))
+    		dialog.setFilterPath(currentWalletDir);
         return dialog.open();
     }
 

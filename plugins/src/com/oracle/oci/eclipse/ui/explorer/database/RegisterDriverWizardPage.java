@@ -4,6 +4,8 @@
  */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
+import org.eclipse.datatools.connectivity.drivers.DriverInstance;
+import org.eclipse.datatools.connectivity.drivers.DriverManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -24,6 +26,7 @@ public class RegisterDriverWizardPage extends WizardPage {
     
     private ISelection selection;
     private Text jarFileText;
+    String registeredDriverJar;
 
     public RegisterDriverWizardPage(ISelection selection) {
         super("wizardPage");
@@ -32,6 +35,11 @@ public class RegisterDriverWizardPage extends WizardPage {
                				+ "This is a one time effort after you install the plugin.";
         setDescription(description);
         this.selection = selection;
+        DriverInstance existingDriver = DriverManager.getInstance()
+				.getDriverInstanceByID(ConfigureADBConnectionProfile.TARGET_DRIVER_INSTANCE_ID);
+        if(existingDriver != null)
+        	registeredDriverJar = existingDriver.getJarList();
+        
     }
 
     @Override
@@ -66,6 +74,8 @@ public class RegisterDriverWizardPage extends WizardPage {
         label.setText("&JDBC Jar File:");
 
         jarFileText = new Text(innerTopContainer, SWT.BORDER | SWT.SINGLE);
+        if(registeredDriverJar != null)
+        	jarFileText.setText(registeredDriverJar);
         jarFileText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         jarFileText.setEditable(false);
 
