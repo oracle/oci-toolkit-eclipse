@@ -51,11 +51,13 @@ public class CloneADBWizard extends Wizard implements INewWizard {
     		return false;
     	
     	final String compartmentId = page.getSelectedCompartmentId();
-    	final CreateAutonomousDatabaseDetails.DbWorkload workloadType;
+    	CreateAutonomousDatabaseDetails.DbWorkload workloadType = null;
 		if (instance.getDbWorkload() == AutonomousDatabaseSummary.DbWorkload.Dw) {
 			workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Dw;
-		} else {
+		} else if(instance.getDbWorkload() == AutonomousDatabaseSummary.DbWorkload.Dw) {
 			workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Oltp;
+		} else if(instance.getDbWorkload() == AutonomousDatabaseSummary.DbWorkload.Ajd) {
+			workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Ajd;
 		}
 		
 		final boolean isFreeTier = (instance.getIsFreeTier() != null) && instance.getIsFreeTier()

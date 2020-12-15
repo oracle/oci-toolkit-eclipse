@@ -5,11 +5,13 @@
 package com.oracle.oci.eclipse.sdkclients;
 
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.ADMINPASSWORD;
+import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CHANGE_WORKLOAD_TYPE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CREATECLONE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CREATECONNECTION;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.DOWNLOAD_CLIENT_CREDENTIALS;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.INSTANCE_WALLET;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.REGIONAL_WALLET;
+import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.RESTART;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.RESTORE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.SCALEUPDOWN;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.SERVICE_CONSOLE;
@@ -65,6 +67,7 @@ import com.oracle.bmc.database.requests.GetAutonomousDatabaseWalletRequest;
 import com.oracle.bmc.database.requests.ListAutonomousContainerDatabasesRequest;
 import com.oracle.bmc.database.requests.ListAutonomousDatabaseBackupsRequest;
 import com.oracle.bmc.database.requests.ListAutonomousDatabasesRequest;
+import com.oracle.bmc.database.requests.RestartAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.RestoreAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.StartAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.StopAutonomousDatabaseRequest;
@@ -83,10 +86,12 @@ import com.oracle.oci.eclipse.account.AuthProvider;
 import com.oracle.oci.eclipse.ui.explorer.common.CustomWizardDialog;
 import com.oracle.oci.eclipse.ui.explorer.database.ADBConstants;
 import com.oracle.oci.eclipse.ui.explorer.database.ChangeAdminPasswordADBWizard;
+import com.oracle.oci.eclipse.ui.explorer.database.ChangeWorkloadTypeWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.CloneADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.CreateADBConnectionWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.DownloadADBWalletWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.DownloadClientCredentialsWizard;
+import com.oracle.oci.eclipse.ui.explorer.database.RestartADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.RestoreADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.RotateWalletWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.ScaleUpDownADBWizard;
@@ -192,6 +197,14 @@ public class ADBInstanceClient extends BaseClient {
                 
             case SERVICE_CONSOLE:
                 launchServiceConsole(instance);
+                break;
+                
+            case CHANGE_WORKLOAD_TYPE:
+                changeWorkloadTypeToOLTP(instance);
+                break;
+                
+            case RESTART:
+                restartInstance(instance);
                 break;
 
             }
@@ -643,6 +656,45 @@ public class ADBInstanceClient extends BaseClient {
 
         databseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
                 .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instanceId).build());
+    }
+    
+    private void changeWorkloadTypeToOLTP(final AutonomousDatabaseSummary instance) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
+                        new ChangeWorkloadTypeWizard(instance));
+                dialog.setFinishButtonText("Change");
+                if (Window.OK == dialog.open()) {
+                }
+            }
+        });
+    }
+    
+    public void changeWorkloadTypeToOLTP(final String instanceId) {
+        UpdateAutonomousDatabaseDetails updateRequest = UpdateAutonomousDatabaseDetails.builder()
+                .dbWorkload(UpdateAutonomousDatabaseDetails.DbWorkload.Oltp).build();
+
+        databseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instanceId).build());
+    }
+    
+    private void restartInstance(final AutonomousDatabaseSummary instance) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
+                        new RestartADBWizard(instance));
+                dialog.setFinishButtonText("Restart");
+                if (Window.OK == dialog.open()) {
+                }
+            }
+        });
+    }
+    
+    public void restartInstance(final String instanceId) {
+        databseClient.restartAutonomousDatabase(
+                RestartAutonomousDatabaseRequest.builder().autonomousDatabaseId(instanceId).build());
     }
     
     private void launchServiceConsole(final AutonomousDatabaseSummary instance) {

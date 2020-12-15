@@ -5,9 +5,11 @@
 package com.oracle.oci.eclipse.ui.explorer.database.editor;
 
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.ADMINPASSWORD;
+import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CHANGE_WORKLOAD_TYPE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CREATECLONE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CREATECONNECTION;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.DOWNLOAD_CLIENT_CREDENTIALS;
+import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.RESTART;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.RESTORE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.SCALEUPDOWN;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.SERVICE_CONSOLE;
@@ -72,6 +74,7 @@ public class ADBInstanceTable  extends BaseTable {
 
     private static final String WORKLOAD_DW = "Data Warehouse";
     private static final String WORKLOAD_OLTP = "Transaction Processing";
+    private static final String WORKLOAD_AJD = "JSON Database";
     private static final String WORKLOAD_ALL = "All";
     Combo combo;
 
@@ -183,6 +186,7 @@ public class ADBInstanceTable  extends BaseTable {
 
         manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_ADW_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Dw, ADBInstanceTable.this));
         manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_ATP_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Oltp, ADBInstanceTable.this));
+        manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_AJD_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Ajd, ADBInstanceTable.this));
         manager.add(new Separator());
 
         if (getSelectedObjects().size() ==1) {
@@ -190,8 +194,9 @@ public class ADBInstanceTable  extends BaseTable {
             final LifecycleState lifeCycleState = db.getLifecycleState();
             final boolean isDedicated = db.getIsDedicated() !=null && db.getIsDedicated();
             final boolean isFreeTier = db.getIsFreeTier() != null && db.getIsFreeTier();
+            final boolean isAjd = db.getDbWorkload() == AutonomousDatabaseSummary.DbWorkload.Ajd;
             for (String action : getSupportedADBActions()) {
-                if(enableAction(action, lifeCycleState, isDedicated, isFreeTier))
+                if(enableAction(action, lifeCycleState, isDedicated, isFreeTier, isAjd))
                     manager.add(new ADBInstanceAction(ADBInstanceTable.this, action));
             }
             manager.add(new Separator());
@@ -216,6 +221,7 @@ public class ADBInstanceTable  extends BaseTable {
         combo.add(WORKLOAD_ALL);
         combo.add(WORKLOAD_DW);
         combo.add(WORKLOAD_OLTP);
+        combo.add(WORKLOAD_AJD);
 
         // default value
         combo.select(0);
@@ -250,6 +256,8 @@ public class ADBInstanceTable  extends BaseTable {
             workload = DbWorkload.Dw;
         } else if(WORKLOAD_OLTP.equals(workloadType)) {
             workload = DbWorkload.Oltp;
+        } else if(WORKLOAD_AJD.equals(workloadType)) {
+            workload = DbWorkload.Ajd;
         } else {
             workload = DbWorkload.UnknownEnumValue;
         }
@@ -271,7 +279,7 @@ public class ADBInstanceTable  extends BaseTable {
     }
 
     private boolean enableAction(final String action, final LifecycleState lifeCycleState,
-            final boolean isDedicated, final boolean isFreeTier) {
+            final boolean isDedicated, final boolean isFreeTier, boolean isAjd) {
         switch (action) {
         case START:
             return LifecycleState.Stopped.equals(lifeCycleState) ? true : false;
@@ -282,7 +290,7 @@ public class ADBInstanceTable  extends BaseTable {
         case SCALEUPDOWN:
             return isFreeTier ? false : true;
         case UPDATELICENCETYPE:
-            return (isFreeTier || isDedicated) ? false : true;
+            return (isFreeTier || isDedicated || isAjd) ? false : true;
         case ADMINPASSWORD:
             return true;
         case TERMINATE:
@@ -296,6 +304,10 @@ public class ADBInstanceTable  extends BaseTable {
         case UPGRADE_INSTANCE_TO_PAID:
         	return isFreeTier ? true : false;
         case SERVICE_CONSOLE:
+        	return true;
+        case CHANGE_WORKLOAD_TYPE:
+        	return isAjd ? true : false;
+        case RESTART:
         	return true;
         }
         return false;
