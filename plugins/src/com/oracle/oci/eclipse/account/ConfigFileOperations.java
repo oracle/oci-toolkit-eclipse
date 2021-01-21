@@ -173,10 +173,10 @@ public final class ConfigFileOperations {
                 accumulator.accept(line);
             }
         }
-        if (!accumulator.foundDefaultProfile) {
-            throw new IllegalStateException(
-                    "No DEFAULT profile was specified in the configuration");
-        }
+//        if (!accumulator.foundDefaultProfile) {
+//            throw new IllegalStateException(
+//                    "No DEFAULT profile was specified in the configuration");
+//        }
         if (profile != null && !accumulator.configurationsByProfile.containsKey(profile)) {
             throw new IllegalArgumentException(
                     "No profile named " + profile + " exists in the configuration file");
