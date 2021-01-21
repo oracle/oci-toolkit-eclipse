@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## 1.3.1
+### Fixed
+- Eclipse Preferences to choose any active profile from the configuration even with no DEFAULT profile.
+- Eclipse Preferences to reflect appropriate profile when selected from the Preference page.
+
+
 ## 1.3.0
 ### Added
 - Support for Autonomous JSON Database (AJD) Service.
