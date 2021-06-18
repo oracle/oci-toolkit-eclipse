@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.StorageException;
@@ -44,11 +45,13 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 	private Text walletDirText;
 	private AutonomousDatabaseSummary adbInstance;
     private Button autoConnectCheckBox;
+    private boolean isInitialized; // = false;
 
 	public CreateADBConnectionWizardPage(AutonomousDatabaseSummary adbInstance) {
 		super("wizardPage");
 		setTitle("Create Connection to Autonomous Database");
 		setDescription("This wizard creates a new connection to Autonomous Database. Please enter the required details.");
+		setPageComplete(false);  // password starts out blank and must be entered to complete
 		this.adbInstance = adbInstance;
 	}
 
@@ -80,6 +83,12 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 		passwordText = new Text(innerTopContainer, SWT.BORDER | SWT.PASSWORD);
 		GridData gd2 = new GridData(GridData.FILL_HORIZONTAL);
 		passwordText.setLayoutData(gd2);
+		passwordText.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e) {
+                updateStatus(validate());
+            }
+        });
 
         Composite innerContainer = new Composite(topLevelContainer, SWT.NONE);
         GridLayout innerLayout = new GridLayout();
@@ -99,6 +108,7 @@ public class CreateADBConnectionWizardPage extends WizardPage {
             @Override
             public void modifyText(ModifyEvent e) {
                 walletDirectoryChanged();
+                updateStatus(validate());
             }
         });
         
@@ -220,7 +230,6 @@ public class CreateADBConnectionWizardPage extends WizardPage {
         
         if (status.isOK())
         {
-            updateStatus((String)null);
             aliasList.setEnabled(true);
     		aliasList.clearSelection();
     		aliasList.removeAll();
@@ -235,19 +244,33 @@ public class CreateADBConnectionWizardPage extends WizardPage {
         }
         else
         {
-            updateStatus(status.getMessage());
             aliasList.setEnabled(false);
         }
 	}
 
     private void updateStatus(IStatus status) {
-        updateStatus(status.getMessage());
+        IStatus fullStatus = status;
+        if (status.isMultiStatus()) {
+            if (!status.isOK()) {
+                MultiStatus multiStatus = (MultiStatus) status;
+                for (IStatus child : multiStatus.getChildren()) {
+                    if (!child.isOK()) {
+                        fullStatus = new Status(child.getSeverity(), getClass(), child.getMessage());
+                    }
+                }
+            }
+        }
+        if (isInitialized) {
+            if (!fullStatus.isOK()) {
+                // don't update status if we're not initialized yet
+                setErrorMessage(fullStatus.getMessage());
+                setPageComplete(false);
+            } else {
+                setErrorMessage(null);
+                setPageComplete(true);
+            }
+        }
     }
-
-	private void updateStatus(String message) {
-		setErrorMessage(message);
-		setPageComplete(message == null);
-	}
 
 	public String getUserName() {
 		return userText.getText();
