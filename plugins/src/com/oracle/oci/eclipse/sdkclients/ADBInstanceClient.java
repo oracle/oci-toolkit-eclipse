@@ -20,6 +20,7 @@ import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.STOP;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.TERMINATE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.UPDATELICENCETYPE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.UPGRADE_INSTANCE_TO_PAID;
+import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.COPY_ADMIN_PASSWORD;
 
 import java.beans.PropertyChangeEvent;
 import java.io.BufferedOutputStream;
@@ -41,9 +42,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 import com.oracle.bmc.database.DatabaseClient;
 import com.oracle.bmc.database.model.AutonomousContainerDatabaseSummary;
@@ -83,12 +87,14 @@ import com.oracle.bmc.database.responses.ListAutonomousDatabaseBackupsResponse;
 import com.oracle.bmc.database.responses.ListAutonomousDatabasesResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.ui.explorer.common.CustomWizardDialog;
 import com.oracle.oci.eclipse.ui.explorer.database.ADBConstants;
 import com.oracle.oci.eclipse.ui.explorer.database.ChangeAdminPasswordADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.ChangeWorkloadTypeWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.CloneADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.CreateADBConnectionWizard;
+import com.oracle.oci.eclipse.ui.explorer.database.DBUtils;
 import com.oracle.oci.eclipse.ui.explorer.database.DownloadADBWalletWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.DownloadClientCredentialsWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.RestartADBWizard;
@@ -206,7 +212,9 @@ public class ADBInstanceClient extends BaseClient {
             case RESTART:
                 restartInstance(instance);
                 break;
-
+            case COPY_ADMIN_PASSWORD:
+                copyAdminPassword(instance);
+                break;
             }
         }
 
@@ -318,6 +326,45 @@ public class ADBInstanceClient extends BaseClient {
 
         databseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
                 .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instance.getId()).build());
+    }
+
+    private void copyAdminPassword(AutonomousDatabaseSummary instance) {
+        String key = PreferencesWrapper.createSecurePreferenceKey(instance.getCompartmentId(), instance.getDbName());
+        final Display display = Display.getDefault();
+        if (display != null) {
+            display.syncExec(new Runnable() {
+
+                @Override
+                public void run() {
+                    String value = null;
+                    try {
+                        value = PreferencesWrapper.getSecurePreferences().get(key, null);
+                    } catch (StorageException e) {
+                        ErrorHandler.logErrorStack("Error loading secure storage", e);
+                    }
+                    boolean success = false;
+                    if (value != null) {
+                        DBUtils.copyPasswordToClipboard(display, value);
+                        success = true;
+                    }
+                    Shell activeShell = display.getActiveShell();
+                    if (success) {
+
+                        MessageDialog.openInformation(activeShell, "Success",
+                                "Password has been copied to the clipboard");
+                    } else {
+                        MessageDialog.openWarning(activeShell, "Couldn't find password",
+                                "Could not find password for specified ADB instance");
+                    }
+
+                }
+            });
+        }
+
+        else
+        {
+            ErrorHandler.logError("Copy Admin Password being called from non-SWT thread");
+        }
     }
 
     private void changeAdminPassword(final AutonomousDatabaseSummary instance) {

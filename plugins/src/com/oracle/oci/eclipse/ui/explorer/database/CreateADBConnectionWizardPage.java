@@ -13,6 +13,8 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.equinox.security.storage.ISecurePreferences;
+import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -152,7 +154,21 @@ public class CreateADBConnectionWizardPage extends WizardPage {
         }
 
 		setControl(innerContainer);
+		isInitialized = true;
 		
+		// try to load the password after initialized is set to true so that it affects
+		// validation of the page
+        String passwordPrefKey = PreferencesWrapper.createSecurePreferenceKey(adbInstance.getCompartmentId(), adbInstance.getDbName()); 
+        ISecurePreferences securePreferences = PreferencesWrapper.getSecurePreferences();
+        try {
+            String password = securePreferences.get(passwordPrefKey, null);
+            if (password != null)
+            {
+                passwordText.setText(password);
+            }
+        } catch (StorageException e1) {
+            ErrorHandler.logErrorStack("Error loading admin password", e1);
+        }
 	}
 	
 	private Set<String> getTnsEntries(String walletLocation) {

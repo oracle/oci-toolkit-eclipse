@@ -81,4 +81,12 @@ public class PreferencesWrapper {
     public static String getUserAgent() {
         return String.format("Oracle-EclipseToolkit/%s", VERSION);
     }
+
+    public static ISecurePreferences getSecurePreferences() {
+        return securePreferences;
+    }
+
+    public static String createSecurePreferenceKey(String compartmentId, String databaseName) {
+        return String.format("ADMIN_PASS_%s_%s", compartmentId, databaseName);
+    }
 }

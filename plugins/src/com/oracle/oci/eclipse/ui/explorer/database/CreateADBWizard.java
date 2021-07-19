@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -22,6 +21,8 @@ import org.eclipse.ui.IWorkbenchWizard;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails.Builder;
+import com.oracle.oci.eclipse.ErrorHandler;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
 
 public class CreateADBWizard  extends Wizard implements INewWizard {
@@ -88,7 +89,7 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
             }
         };
         try {
-            getContainer().run(true, false, op);
+            getContainer().run(true, true, op);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
@@ -102,10 +103,8 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
         {
             String key = PreferencesWrapper.createSecurePreferenceKey(page.getADBCompartmentId(), page.getDatabaseName());
             try {
-                ISecurePreferences securePreferences = PreferencesWrapper.getSecurePreferences();
-                securePreferences.put(key, page.getAdminPassword(), true);
-                securePreferences.flush();
-            } catch (StorageException | IOException e) {
+                PreferencesWrapper.getSecurePreferences().put(key, page.getAdminPassword(), true);
+            } catch (StorageException e) {
                ErrorHandler.logErrorStack("Error storing admin password", e);
             }
         }
