@@ -19,6 +19,7 @@
             <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.objectstorage.navigatorContent" />
             <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.database.navigatorContent" />
             <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.container.navigatorContent" />
+            <contentExtension isRoot="false" pattern="com.oracle.oci.eclipse.ui.explorer.dataflow.navigatorContent" />
          </includes>
       </viewerContentBinding>
    </extension>
@@ -82,6 +83,80 @@
           id="com.oracle.oci.eclipse.ui.explorer.compute.editor.InstanceEditor"
           name="Bucket" />
    </extension>
+   
+     <!-- Dataflow -->
+      <extension point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent activeByDefault="true"
+	      contentProvider="com.oracle.oci.eclipse.ui.explorer.dataflow.DataflowContentProvider"
+	      labelProvider="com.oracle.oci.eclipse.ui.explorer.dataflow.DataflowLabelProvider"
+	      id="com.oracle.oci.eclipse.ui.explorer.dataflow.navigatorContent"
+	      name="Virtual content" priority="normal">
+         <triggerPoints>
+            <instanceof value="com.oracle.oci.eclipse.ui.explorer.RootElement" />
+         </triggerPoints>
+         <possibleChildren>
+            <or>
+               <instanceof value="com.oracle.oci.eclipse.ui.explorer.dataflow.DataflowRootElement" />
+            </or>
+         </possibleChildren>
+      </navigatorContent>
+   </extension>
+      <!-- Dataflow Application Editor -->
+   <extension point="org.eclipse.ui.editors">
+      <editor class="com.oracle.oci.eclipse.ui.explorer.dataflow.editor.ApplicationEditor"
+          default="false"
+          icon="icons/block-storage.png"
+          id="com.oracle.oci.eclipse.ui.explorer.dataflow.editor.ApplicationEditor"
+          name="Bucket" />
+   </extension>
+   
+         <!-- Dataflow Private End Points Editor -->
+   <extension point="org.eclipse.ui.editors">
+      <editor class="com.oracle.oci.eclipse.ui.explorer.dataflow.editor.PrivateEndpointEditor"
+          default="false"
+          icon="icons/block-storage.png"
+          id="com.oracle.oci.eclipse.ui.explorer.dataflow.editor.PrivateEndpointEditor"
+          name="Bucket" />
+   </extension>
+   
+       <!-- Run Editor -->
+   <extension point="org.eclipse.ui.editors">
+      <editor class="com.oracle.oci.eclipse.ui.explorer.dataflow.editor.RunEditor"
+          default="false"
+          icon="icons/compute-instance.png"
+          id="com.oracle.oci.eclipse.ui.explorer.dataflow.editor.RunEditor"
+          name="Bucket" />		  
+   </extension>
+   
+   	 <!-- Dataflow Setting Up Editor -->
+   <extension point="org.eclipse.ui.menus"> 
+   		<menuContribution
+            locationURI="toolbar:com.oracle.oci.eclipse.view">
+            <command
+               commandId="com.oracle.oci.eclipse.commands.settingUpDataflow"
+               icon="icons/block-storage.png"
+               label="Setting Up Dataflow">
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="true"
+            locationURI="menu:com.oracle.oci.eclipse.commands.settingUpDataflow">
+      </menuContribution>
+   </extension>
+   <extension point="org.eclipse.ui.commands">
+  	  <command
+            categoryId="com.oracle.oci.eclipse.commands.category"
+            id="com.oracle.oci.eclipse.commands.settingUpDataflow"
+            name="Setting Up Dataflow">
+      </command>
+   </extension>
+   <extension point="org.eclipse.ui.handlers">
+      <handler
+            class="com.oracle.oci.eclipse.ui.explorer.dataflow.wizards.SettingUpDataflow"
+            commandId="com.oracle.oci.eclipse.commands.settingUpDataflow">
+      </handler>
+   </extension>
+   
    <!-- Block Storage Editor -->
    <extension point="org.eclipse.ui.editors">
       <editor class="com.oracle.oci.eclipse.ui.explorer.compute.editor.VolumeEditor"
@@ -184,6 +259,18 @@
                icon="icons/compartments.png"
                label="Compartment Selector">
          </command>
+         <command
+               commandId="com.oracle.oci.eclipse.commands.runasDataflowApplication"
+               icon="icons/bucket.png"
+               label="Run as Dataflow Application">
+         </command>
+         
+         <command
+               commandId="com.oracle.oci.eclipse.commands.settingUpDataflow"
+               icon="icons/compute.png"
+               label="Setting Up Dataflow">
+         </command>
+         
       </menuContribution>
       <menuContribution
             allPopups="true"
@@ -196,7 +283,17 @@
       <menuContribution
             allPopups="true"
             locationURI="menu:com.oracle.oci.eclipse.commands.selectCompartment">
+      </menuContribution>           
+      <menuContribution
+            allPopups="true"
+            locationURI="menu:com.oracle.oci.eclipse.commands.runasDataflowApplication">
+      </menuContribution>  
+          
+      <menuContribution
+            allPopups="true"
+            locationURI="menu:com.oracle.oci.eclipse.commands.settingUpDataflow">
       </menuContribution>
+      
    </extension>
    
    <!-- Command id="com.oracle.oci.eclipse.commands.selectRegion.parameter" -->
@@ -224,6 +321,18 @@
             id="com.oracle.oci.eclipse.commands.selectCompartment"
             name="Select Compartment">
       </command>
+            <command
+            categoryId="com.oracle.oci.eclipse.commands.category"
+            id="com.oracle.oci.eclipse.commands.runasDataflowApplication"
+            name="Run as Dataflow Application">
+      </command>
+      
+      <command
+            categoryId="com.oracle.oci.eclipse.commands.category"
+            id="com.oracle.oci.eclipse.commands.settingUpDataflow"
+            name="Setting Up Dataflow">
+      </command>
+      
    </extension>
    
    <extension point="org.eclipse.ui.handlers">
@@ -237,6 +346,16 @@
             class="com.oracle.oci.eclipse.ui.account.CompartmentSelect"
             commandId="com.oracle.oci.eclipse.commands.selectCompartment">
       </handler>
+      <handler
+            class="com.oracle.oci.eclipse.ui.explorer.dataflow.wizards.RunasDataflowApplication"
+            commandId="com.oracle.oci.eclipse.commands.runasDataflowApplication">
+      </handler>
+      
+      <handler
+            class="com.oracle.oci.eclipse.ui.explorer.dataflow.wizards.SettingUpDataflow"
+            commandId="com.oracle.oci.eclipse.commands.settingUpDataflow">
+      </handler>
+      
    </extension>
    
    <extension point="org.eclipse.ui.bindings">

@@ -7,6 +7,7 @@ package com.oracle.oci.eclipse.ui.explorer.common;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -16,6 +17,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
@@ -57,14 +59,24 @@ public class DetailsTable {
         /** set the new location */
         shell.setLocation(x, y);
 
-
+        //
+        shell.setSize(1000, 1000);
+        final ScrolledComposite sc1 = new ScrolledComposite(shell, SWT.H_SCROLL);
+        sc1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        final Composite c1 = new Composite(sc1, SWT.NONE);
+        sc1.setContent(c1);
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 1;
+        c1.setLayout(layout);
+        
         GridData gridData = new GridData(GridData.FILL);
         gridData.grabExcessHorizontalSpace = true;
 
-        Label tip = new Label(shell, SWT.FILL);
+        Label tip = new Label(c1, SWT.FILL);tip.setLayoutData(new GridData());
         tip.setText("Select text to copy.");
 
-        Table table = new Table(shell, SWT.BORDER);
+        Table table = new Table(c1, SWT.BORDER);table.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        c1.setSize(c1.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         TableColumn column1 = new TableColumn(table, SWT.NONE);
         TableColumn column2 = new TableColumn(table, SWT.NONE);
 
@@ -107,6 +119,7 @@ public class DetailsTable {
             @Override
             public void widgetDefaultSelected(SelectionEvent e) {
             }});
+        c1.setSize(c1.computeSize(SWT.DEFAULT, SWT.DEFAULT));
     }
 
     public void openTable() {

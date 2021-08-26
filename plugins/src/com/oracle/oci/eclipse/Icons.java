@@ -25,7 +25,8 @@ public enum Icons {
     DATABASE_UNAVAILABLE_STATE("icons/db-unavailable-state.png"),
     BACKUP_ACTIVE_STATE("icons/backup-active-state.png"),
     COMPARTMENT("icons/compartments.png"),
-    KUBERNETES_ENGINE("icons/oke.png");
+    KUBERNETES_ENGINE("icons/oke.png"),
+	DATAFLOW("icons/big-data-50.png");
 
     private String path;
 

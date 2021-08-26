@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.oracle.bmc.Region;
+import com.oracle.bmc.identity.model.Policy;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.AuthToken;
@@ -18,21 +19,25 @@ import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.model.CreateAuthTokenDetails;
+import com.oracle.bmc.identity.model.CreatePolicyDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.bmc.identity.model.Tenancy;
 import com.oracle.bmc.identity.model.User;
 import com.oracle.bmc.identity.requests.CreateAuthTokenRequest;
+import com.oracle.bmc.identity.requests.CreatePolicyRequest;
 import com.oracle.bmc.identity.requests.GetTenancyRequest;
 import com.oracle.bmc.identity.requests.GetUserRequest;
 import com.oracle.bmc.identity.requests.ListAvailabilityDomainsRequest;
 import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
 import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
 import com.oracle.bmc.identity.responses.CreateAuthTokenResponse;
+import com.oracle.bmc.identity.responses.CreatePolicyResponse;
 import com.oracle.bmc.identity.responses.GetTenancyResponse;
 import com.oracle.bmc.identity.responses.GetUserResponse;
 import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
+import com.oracle.bmc.logging.model.Log;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
 
@@ -182,5 +187,27 @@ public class IdentClient extends BaseClient {
         GetUserResponse response = identityClient.getUser(request);
 
         return response.getUser();
+    }
+    
+    public Policy createIAMPolicy(String compartmentId, String desc, String name, ArrayList<String> statements) {
+    	System.out.println("compartmentId: " + compartmentId);
+    	System.out.println("desc: " + desc);
+    	System.out.println("name: " + name);
+    	System.out.println("statements: " + statements);
+    	
+    	CreatePolicyRequest request = 
+    			CreatePolicyRequest.builder()
+                        .createPolicyDetails(
+                                CreatePolicyDetails.builder()
+                                        .compartmentId(compartmentId)
+                                        .description(desc)
+                                        .name(name)
+                                        .statements(statements)
+                                        .build())
+                        .build();
+    	
+    	CreatePolicyResponse response = identityClient.createPolicy(request);
+        System.out.println("Successfully added policies. Statements: " + String.join("\n", statements));
+        return response.getPolicy();
     }
 }

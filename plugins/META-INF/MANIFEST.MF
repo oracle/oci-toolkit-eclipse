@@ -18,10 +18,11 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.datatools.connectivity.ui;resolution:=optional,
  org.eclipse.datatools.connectivity.ui.dse;resolution:=optional,
  org.eclipse.equinox.security,
- org.eclipse.osgi
+ org.eclipse.osgi,
+ org.eclipse.jdt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.23.0.jar,
+Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.37.0.jar,
  lib/thirdparty/commons-lang3-3.8.1.jar,
  lib/thirdparty/commons-io-2.6.jar,
  lib/thirdparty/commons-codec-1.13.jar,

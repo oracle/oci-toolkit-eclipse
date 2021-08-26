@@ -4,6 +4,10 @@
  */
 package com.oracle.oci.eclipse;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -46,6 +50,13 @@ public class Activator extends AbstractUIPlugin {
      */
     @Override
     public void stop(BundleContext context) throws Exception {
+		File theDir = new File(System.getProperty("java.io.tmpdir")+"\\dataflowtempdir");
+		if(theDir.exists()) {
+			for(String s: theDir.list()){
+			    File currentFile = new File(theDir.getPath(),s);
+			    currentFile.delete();
+			}
+		}
         plugin = null;
         super.stop(context);
     }

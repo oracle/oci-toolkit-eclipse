@@ -78,6 +78,10 @@ public class ObjStorageClient extends BaseClient {
     public String getNamespace() {
         return this.getNamespace(getObjectStorageClient());
     }
+    
+    public void setNamespace(String namespace) {
+    	this.namespaceName = namespace;
+    }
 
     public String getNamespace(ObjectStorage objectStorageClient) {
         if(namespaceName == null || namespaceName.isEmpty()) {
@@ -94,7 +98,7 @@ public class ObjStorageClient extends BaseClient {
         return objectStorageClient;
     }
 
-    private ObjectStorage getObjectStorageClient() {
+    public ObjectStorage getObjectStorageClient() {
         return objectStorageClient;
     }
 
@@ -136,7 +140,34 @@ public class ObjStorageClient extends BaseClient {
 
         return bList;
     }
+    public List<BucketSummary> getBucketsinCompartment(String CompartmentId) throws Exception {
+        String nextToken = null;
+        List<BucketSummary> bList = new ArrayList<BucketSummary>();
+        String namespace = getNamespace(getObjectStorageClient());
+        if (namespace == null) return bList;
 
+        Builder listBucketsBuilder =
+                ListBucketsRequest.builder()
+                .namespaceName(namespace)
+                .compartmentId(CompartmentId);
+
+        do {
+            listBucketsBuilder.page(nextToken);
+            try {
+                ListBucketsResponse listBucketsResponse =
+                        objectStorageClient.listBuckets(listBucketsBuilder.build());
+                bList.addAll(listBucketsResponse.getItems());
+                nextToken = listBucketsResponse.getOpcNextPage();
+            } catch(Throwable e) {
+                ErrorHandler.logError("Unable to list buckets: " + e.getMessage());
+                return bList;
+            }
+
+        } while (nextToken != null);
+
+        return bList;
+    }
+  
     public List<ObjectSummary> getBucketObjects(String bucket) throws Exception {
 
         String nextToken = null;
@@ -171,6 +202,24 @@ public class ObjStorageClient extends BaseClient {
                         .build());
         return createBucketResponse.getBucket();
     }
+    
+    public Bucket createBucket(String bucketName, String namespace) {
+        CreateBucketResponse createBucketResponse =
+                objectStorageClient.createBucket(
+                        CreateBucketRequest.builder()
+                        .namespaceName(namespace)
+                        .createBucketDetails(
+                                CreateBucketDetails.builder()
+                                .name(bucketName)
+                                .compartmentId(AuthProvider.getInstance().getCompartmentId())
+                                .publicAccessType(
+                                        CreateBucketDetails.PublicAccessType
+                                        .ObjectRead)
+                                .build())
+                        .build());
+        return createBucketResponse.getBucket();
+    }
+
 
     public void deleteBucket(String bucketName) throws Exception {
         // Delete all objects inside the bucket before deleting the bucket
