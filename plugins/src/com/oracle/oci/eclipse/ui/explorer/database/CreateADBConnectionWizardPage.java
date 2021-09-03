@@ -255,7 +255,7 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 
 	private IStatus validateWalletDirectory(String walletDirStr)
 	{
-	    if (walletDirStr == null || walletDirStr.isBlank())
+	    if (walletDirStr == null || walletDirStr.trim().isEmpty())
 	    {
 	        return new Status(IStatus.ERROR, getClass(), "Wallet Directory cannot be empty");
 	    }
