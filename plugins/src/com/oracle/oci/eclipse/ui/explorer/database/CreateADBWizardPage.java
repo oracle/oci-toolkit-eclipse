@@ -58,77 +58,75 @@ import com.oracle.oci.eclipse.ui.explorer.database.validate.PasswordInputValidat
 
 public class CreateADBWizardPage extends WizardPage {
 
-    private Text displayNameText;
-    private Text databaseNameText;
-    private Label dbNameRule1;
-    private Text compartmentText;
+	private Text displayNameText;
+	private Text databaseNameText;
+	private Label dbNameRule1;
+	private Text compartmentText;
 
-    private Group deploymentTypeGroup;
-    private Button serverlessDeploymentRadioButton;
-    private Button dedicatedDeploymentRadioButton;
+	private Group deploymentTypeGroup;
+	private Button serverlessDeploymentRadioButton;
+	private Button dedicatedDeploymentRadioButton;
 
-    private Label alwaysFreeLabel;
-    private Button alwaysFreeCheckButton;
-    private Spinner cpuCoreCountSpinner;
-    private Label storageInTBLabel;
-    private Spinner storageInTBSpinner;
-    private Text alwaysFreeStorageInTBText;
-    private Label autoScalingLabel;
-    private Button autoScalingEnabledCheckBox;
+	private Label alwaysFreeLabel;
+	private Button alwaysFreeCheckButton;
+	private Spinner cpuCoreCountSpinner;
+	private Label storageInTBLabel;
+	private Spinner storageInTBSpinner;
+	private Text alwaysFreeStorageInTBText;
+	private Label autoScalingLabel;
+	private Button autoScalingEnabledCheckBox;
 
-    private Label adminUserNameLabel;
-    private Text adminUserNameText;
-    private Text adminPasswordText;
-    private Text confirmAdminPasswordText;
+	private Label adminUserNameLabel;
+	private Text adminUserNameText;
+	private Text adminPasswordText;
+	private Text confirmAdminPasswordText;
 
-    private Label licenseTypeLabel;
-    private Group licenseTypeGroup;
-    private Button licenseTypeOwnRadioButton;
-    private Button licenseTypeIncludedRadioButton;
+	private Label licenseTypeLabel;
+	private Group licenseTypeGroup;
+	private Button licenseTypeOwnRadioButton;
+	private Button licenseTypeIncludedRadioButton;
 
-    private Label containerDBCompartmentLabel;
-    private Composite adcCompartmentContainer;
-    private Text containerDBCompartmentText;
-    private Button selectContainerDBCompartmentButton;
-    private Label containerDBLabel;
-    private Combo containerDBList;
-    private Compartment selectedADBCompartment;
-    private Compartment selectedContainerDBCompartment;
-    private Compartment defaultContainerDBCompartment;
+	private Label containerDBCompartmentLabel;
+	private Composite adcCompartmentContainer;
+	private Text containerDBCompartmentText;
+	private Button selectContainerDBCompartmentButton;
+	private Label containerDBLabel;
+	private Combo containerDBList;
+	private Compartment selectedADBCompartment;
+	private Compartment selectedContainerDBCompartment;
+	private Compartment defaultContainerDBCompartment;
 
-    // private ISelection selection;
-    private boolean isInitialized; // = false
+	private boolean isInitialized; // = false
 
-    private Map<String, String> containertMap = new TreeMap<String, String>();
-    private DbWorkload workloadType;
+	private Map<String, String> containertMap = new TreeMap<String, String>();
+	private DbWorkload workloadType;
+	
+	private final Object lock = new Object();
+	private boolean isDedicatedSelected = false;
 
-    private final Object lock = new Object();
-    private boolean isDedicatedSelected = false;
+	public CreateADBWizardPage(ISelection selection, DbWorkload workloadType) {
+		super("wizardPage");
+		setTitle("Create Autonomous Database");
+		setDescription("This wizard creates a new Autonomous Database. Please enter the required details.");
+		this.workloadType = workloadType;
+		Compartment rootCompartment = IdentClient.getInstance().getRootCompartment();
+		this.selectedADBCompartment = rootCompartment;
+		this.defaultContainerDBCompartment = rootCompartment;
+		setPageComplete(false); // password starts out blank and must be entered to complete
+	}
 
-    public CreateADBWizardPage(ISelection selection, DbWorkload workloadType) {
-        super("wizardPage");
-        setTitle("Create Autonomous Database");
-        setDescription("This wizard creates a new Autonomous Database. Please enter the required details.");
-        // this.selection = selection;
-        this.workloadType = workloadType;
-        Compartment rootCompartment = IdentClient.getInstance().getRootCompartment();
-        this.selectedADBCompartment = rootCompartment;
-        this.defaultContainerDBCompartment = rootCompartment;
-        setPageComplete(false); // password starts out blank and must be entered to complete
-    }
-
-    @Override
-    public void createControl(Composite parent) {
-
-        Composite container = new Composite(parent, SWT.NULL);
-        GridLayout layout = new GridLayout();
-        container.setLayout(layout);
-        layout.numColumns = 2;
-        layout.verticalSpacing = 9;
-
-        Label compartmentLabel = new Label(container, SWT.NULL);
-        compartmentLabel.setText("&Choose a compartment:");
-        Composite innerTopContainer = new Composite(container, SWT.NONE);
+	@Override
+	public void createControl(Composite parent) {
+		
+		Composite container = new Composite(parent, SWT.NULL);
+		GridLayout layout = new GridLayout();
+		container.setLayout(layout);
+		layout.numColumns = 2;
+		layout.verticalSpacing = 9;
+		
+		Label compartmentLabel = new Label(container, SWT.NULL);
+		compartmentLabel.setText("&Choose a compartment:");
+		Composite innerTopContainer = new Composite(container, SWT.NONE);
         GridLayout innerTopLayout = new GridLayout();
         innerTopLayout.numColumns = 2;
         innerTopContainer.setLayout(innerTopLayout);
@@ -144,85 +142,85 @@ public class CreateADBWizardPage extends WizardPage {
         compartmentButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                handleSelectADBCompartmentEvent();
+            	handleSelectADBCompartmentEvent();
             }
         });
 
-        final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
-        final String defaultDBName = DATE_TIME_FORMAT.format(new Date());
+		final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
+		final String defaultDBName = DATE_TIME_FORMAT.format(new Date());
 
-        Label displayNameLabel = new Label(container, SWT.NULL);
-        displayNameLabel.setText("&Display name:");
-        displayNameText = new Text(container, SWT.BORDER | SWT.SINGLE);
-        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-        displayNameText.setLayoutData(gd);
-        displayNameText.setText("DB " + defaultDBName);
+		Label displayNameLabel = new Label(container, SWT.NULL);
+		displayNameLabel.setText("&Display name:");
+		displayNameText = new Text(container, SWT.BORDER | SWT.SINGLE);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		displayNameText.setLayoutData(gd);
+		displayNameText.setText("DB " + defaultDBName);
 
-        Label databaseNamelabel = new Label(container, SWT.NULL);
-        databaseNamelabel.setText("&Database name:");
-        databaseNameText = new Text(container, SWT.BORDER | SWT.SINGLE);
-        GridData gd1 = new GridData(GridData.FILL_HORIZONTAL);
-        databaseNameText.setLayoutData(gd1);
-        databaseNameText.setText("DB" + defaultDBName);
+		Label databaseNamelabel = new Label(container, SWT.NULL);
+		databaseNamelabel.setText("&Database name:");
+		databaseNameText = new Text(container, SWT.BORDER | SWT.SINGLE);
+		GridData gd1 = new GridData(GridData.FILL_HORIZONTAL);
+		databaseNameText.setLayoutData(gd1);
+		databaseNameText.setText("DB" + defaultDBName);
 
-        new Label(container, SWT.NULL);
-        dbNameRule1 = new Label(container, SWT.NULL);
-        dbNameRule1.setText(
-                "The name must contain only letters and numbers, starting with a letter. Maximum of 14 characters.");
-        // GridDataFactory.defaultsFor(dbNameRule1).span(2, 1).applyTo(dbNameRule1);
+		new Label(container, SWT.NULL);
+		dbNameRule1 = new Label(container, SWT.NULL);
+		dbNameRule1.setText(
+				"The name must contain only letters and numbers, starting with a letter. Maximum of 14 characters.");
+		
+		createAlwaysFreeControl(container);
+		
+		
+		Label cpuCoreCountLabel = new Label(container, SWT.NULL);
+		cpuCoreCountLabel.setText("&CPU core count:");
+		cpuCoreCountSpinner = new Spinner(container, SWT.BORDER | SWT.SINGLE);
+		GridData gd3 = new GridData(GridData.FILL_HORIZONTAL);
+		cpuCoreCountSpinner.setLayoutData(gd3);
+		cpuCoreCountSpinner.setMinimum(ADBConstants.CPU_CORE_COUNT_MIN);
+		cpuCoreCountSpinner.setMaximum(ADBConstants.CPU_CORE_COUNT_MAX);
+		cpuCoreCountSpinner.setIncrement(ADBConstants.CPU_CORE_COUNT_INCREMENT);
+		// default value
+		cpuCoreCountSpinner.setSelection(ADBConstants.CPU_CORE_COUNT_DEFAULT);
 
-        createAlwaysFreeControl(container);
+		storageInTBLabel = new Label(container, SWT.NULL);
+		storageInTBLabel.setText("&Storage (TB):");
+		createStorageInTBSpinner(container);
+		
+		createAutoScalingControl(container);
+		
+		adminUserNameLabel = new Label(container, SWT.NULL);
+		adminUserNameLabel.setText("&Username:");
+		adminUserNameText = new Text(container, SWT.BORDER | SWT.SINGLE);
+		GridData gd6 = new GridData(GridData.FILL_HORIZONTAL);
+		adminUserNameText.setLayoutData(gd6);
+		adminUserNameText.setText("ADMIN");
+		adminUserNameText.setEditable(false);
 
-        Label cpuCoreCountLabel = new Label(container, SWT.NULL);
-        cpuCoreCountLabel.setText("&CPU core count:");
-        cpuCoreCountSpinner = new Spinner(container, SWT.BORDER | SWT.SINGLE);
-        GridData gd3 = new GridData(GridData.FILL_HORIZONTAL);
-        cpuCoreCountSpinner.setLayoutData(gd3);
-        cpuCoreCountSpinner.setMinimum(ADBConstants.CPU_CORE_COUNT_MIN);
-        cpuCoreCountSpinner.setMaximum(ADBConstants.CPU_CORE_COUNT_MAX);
-        cpuCoreCountSpinner.setIncrement(ADBConstants.CPU_CORE_COUNT_INCREMENT);
-        // default value
-        cpuCoreCountSpinner.setSelection(ADBConstants.CPU_CORE_COUNT_DEFAULT);
+		Label adminPasswordLabel = new Label(container, SWT.NULL);
+		adminPasswordLabel.setText("&Password:");
+		Composite compPasswordPanel = new Composite(container, SWT.NONE);
+		GridLayout passwordLayout = new GridLayout(3, false);
+		compPasswordPanel.setLayout(passwordLayout);
+		GridDataFactory.defaultsFor(compPasswordPanel).span(1,1).grab(true, true)
+			.align(SWT.FILL, SWT.FILL).applyTo(compPasswordPanel);
+		adminPasswordText = new Text(compPasswordPanel, SWT.BORDER | SWT.PASSWORD);
+		GridData gd7 = new GridData(GridData.FILL_HORIZONTAL );
+		adminPasswordText.setLayoutData(gd7);
+		ModifyListener passwordListener = new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				updateStatus(validate());
+			}
+		};
+		adminPasswordText.addModifyListener(passwordListener);
+		Button generateBtn = new Button(compPasswordPanel, SWT.PUSH);
+		generateBtn.setImage(PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_TOOL_BACK));
+		generateBtn.setToolTipText("Generate");
 
-        storageInTBLabel = new Label(container, SWT.NULL);
-        storageInTBLabel.setText("&Storage (TB):");
-        createStorageInTBSpinner(container);
-
-        createAutoScalingControl(container);
-
-        adminUserNameLabel = new Label(container, SWT.NULL);
-        adminUserNameLabel.setText("&Username:");
-        adminUserNameText = new Text(container, SWT.BORDER | SWT.SINGLE);
-        GridData gd6 = new GridData(GridData.FILL_HORIZONTAL);
-        adminUserNameText.setLayoutData(gd6);
-        adminUserNameText.setText("ADMIN");
-        adminUserNameText.setEditable(false);
-
-        Label adminPasswordLabel = new Label(container, SWT.NULL);
-        adminPasswordLabel.setText("&Password:");
-        Composite compPasswordPanel = new Composite(container, SWT.NONE);
-        GridLayout passwordLayout = new GridLayout(3, false);
-        compPasswordPanel.setLayout(passwordLayout);
-        GridDataFactory.defaultsFor(compPasswordPanel).span(1,1).grab(true, true)
-            .align(SWT.FILL, SWT.FILL).applyTo(compPasswordPanel);
-        adminPasswordText = new Text(compPasswordPanel, SWT.BORDER | SWT.PASSWORD);
-        GridData gd7 = new GridData(GridData.FILL_HORIZONTAL );
-        adminPasswordText.setLayoutData(gd7);
-        ModifyListener passwordListener = new ModifyListener() {
-            @Override
-            public void modifyText(ModifyEvent e) {
-                updateStatus(validate());
-            }
-        };
-        adminPasswordText.addModifyListener(passwordListener);
-        Button generateBtn = new Button(compPasswordPanel, SWT.PUSH);
-        generateBtn.setImage(PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_TOOL_BACK));
-        generateBtn.setToolTipText("Generate");
-
-        Button copyToClipboard = new Button(compPasswordPanel, SWT.PUSH);
-        copyToClipboard.setImage(PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_TOOL_COPY));
-        copyToClipboard.setToolTipText("Copy to Clipboard");
-        copyToClipboard.addSelectionListener(new SelectionAdapter() {
+		Button copyToClipboard = new Button(compPasswordPanel, SWT.PUSH);
+		copyToClipboard.setImage(PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_TOOL_COPY));
+		copyToClipboard.setToolTipText("Copy to Clipboard");
+		copyToClipboard.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 Clipboard clipboard = new Clipboard(e.display);
@@ -233,13 +231,13 @@ public class CreateADBWizardPage extends WizardPage {
             }
         });
 
-        Label confirmAdminPasswordLabel = new Label(container, SWT.NULL);
-        confirmAdminPasswordLabel.setText("&Confirm password:");
-        confirmAdminPasswordText = new Text(container, SWT.BORDER | SWT.PASSWORD);
-        GridData gd8 = new GridData(GridData.FILL_HORIZONTAL);
-        confirmAdminPasswordText.setLayoutData(gd8);
-        confirmAdminPasswordText.addModifyListener(passwordListener);
-        generateBtn.addSelectionListener(new SelectionAdapter() {
+		Label confirmAdminPasswordLabel = new Label(container, SWT.NULL);
+		confirmAdminPasswordLabel.setText("&Confirm password:");
+		confirmAdminPasswordText = new Text(container, SWT.BORDER | SWT.PASSWORD);
+		GridData gd8 = new GridData(GridData.FILL_HORIZONTAL);
+		confirmAdminPasswordText.setLayoutData(gd8);
+		confirmAdminPasswordText.addModifyListener(passwordListener);
+		generateBtn.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 final String newPass = generateAdminPassword();
@@ -248,134 +246,132 @@ public class CreateADBWizardPage extends WizardPage {
             }
         });
 
-        new Label(container, SWT.NONE);
-        Button saveToSecureStoreBtn = new Button(container, SWT.CHECK);
-        saveToSecureStoreBtn.setText("Save password to Eclipse Secure Store");
-        saveToSecureStoreBtn.setSelection(true);
-        GridDataFactory.defaultsFor(saveToSecureStoreBtn).applyTo(saveToSecureStoreBtn);
-        
-        new Label(container, SWT.NULL);
-        Label passwordRule1 = new Label(container, SWT.NULL);
-        passwordRule1.setText("Password must be 12 to 30 characters and contain at least one uppercase letter,\n"
-                + " one lowercase letter, and one number. The password cannot contain the double \n"
-                + "quote (\") character or the username \"admin\".");
-        passwordRule1.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
-        // GridDataFactory.defaultsFor(passwordRule1).span(2, 1).align(SWT.END,
-        // SWT.BEGINNING).applyTo(passwordRule1);
+		new Label(container, SWT.NONE);
+		Button saveToSecureStoreBtn = new Button(container, SWT.CHECK);
+		saveToSecureStoreBtn.setText("Save password to Eclipse Secure Store");
+		saveToSecureStoreBtn.setSelection(true);
+		GridDataFactory.defaultsFor(saveToSecureStoreBtn).applyTo(saveToSecureStoreBtn);
+		
+		new Label(container, SWT.NULL);
+		Label passwordRule1 = new Label(container, SWT.NULL);
+		passwordRule1.setText("Password must be 12 to 30 characters and contain at least one uppercase letter,\n"
+				+ " one lowercase letter, and one number. The password cannot contain the double \n"
+				+ "quote (\") character or the username \"admin\".");
+		passwordRule1.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
+		
+		if(workloadType == DbWorkload.Oltp) {
+			Label deploymentTypeLabel = new Label(container, SWT.NULL);
+			deploymentTypeLabel.setText("&Choose a deployment type:");
+			deploymentTypeGroup = new Group(container, SWT.NONE);
+			RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
+	        rowLayout.spacing = 205;
+			deploymentTypeGroup.setLayout(rowLayout);
+			GridData gd2 = new GridData(GridData.FILL_HORIZONTAL);
+			deploymentTypeGroup.setLayoutData(gd2);
+			serverlessDeploymentRadioButton = new Button(deploymentTypeGroup, SWT.RADIO);
+			serverlessDeploymentRadioButton.setText("Shared Infrastructure");
+			dedicatedDeploymentRadioButton = new Button(deploymentTypeGroup, SWT.RADIO);
+			dedicatedDeploymentRadioButton.setText("Dedicated Infrastructure");
+			serverlessDeploymentRadioButton.setSelection(true);
+		}
+		
+		createLicenseTypeControl(container);
 
-        if (workloadType == DbWorkload.Oltp) {
-            Label deploymentTypeLabel = new Label(container, SWT.NULL);
-            deploymentTypeLabel.setText("&Choose a deployment type:");
-            deploymentTypeGroup = new Group(container, SWT.NONE);
-            RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
-            rowLayout.spacing = 205;
-            deploymentTypeGroup.setLayout(rowLayout);
-            GridData gd2 = new GridData(GridData.FILL_HORIZONTAL);
-            deploymentTypeGroup.setLayoutData(gd2);
-            serverlessDeploymentRadioButton = new Button(deploymentTypeGroup, SWT.RADIO);
-            serverlessDeploymentRadioButton.setText("Shared Infrastructure");
-            dedicatedDeploymentRadioButton = new Button(deploymentTypeGroup, SWT.RADIO);
-            dedicatedDeploymentRadioButton.setText("Dedicated Infrastructure");
-            serverlessDeploymentRadioButton.setSelection(true);
-        }
+		if (workloadType == DbWorkload.Oltp) {
+			SelectionListener serverlessListener = new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent event) {
+					serverlessButtonSelection(container);
+				};
+			};
+			SelectionListener dedicatedListener = new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent event) {
+					dedicatedButtonSelection(container);
+				};
+			};
+			serverlessDeploymentRadioButton.addSelectionListener(serverlessListener);
+			dedicatedDeploymentRadioButton.addSelectionListener(dedicatedListener);
+		}
+		
+		if(workloadType != DbWorkload.Ajd) {
+			alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
+		        @Override
+		        public void widgetSelected(SelectionEvent event) {
+		        	alwaysFreeButtonSelectionAction(event, container);
+		        }
+		    });
+		}
 
-        createLicenseTypeControl(container);
-
-        if (workloadType == DbWorkload.Oltp) {
-            SelectionListener serverlessListener = new SelectionAdapter() {
-                public void widgetSelected(SelectionEvent event) {
-                    serverlessButtonSelection(container);
-                };
-            };
-            SelectionListener dedicatedListener = new SelectionAdapter() {
-                public void widgetSelected(SelectionEvent event) {
-                    dedicatedButtonSelection(container);
-                };
-            };
-            serverlessDeploymentRadioButton.addSelectionListener(serverlessListener);
-            dedicatedDeploymentRadioButton.addSelectionListener(dedicatedListener);
-        }
-
-        if (workloadType != DbWorkload.Ajd) {
-            alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent event) {
-                    alwaysFreeButtonSelectionAction(event, container);
-                }
-            });
-        }
-
-        setControl(container);
-        isInitialized = true;
-    }
-
-    private void serverlessButtonSelection(Composite container) {
-        synchronized (lock) {
-            if (!isDedicatedSelected)
-                return;
-            isDedicatedSelected = false;
-        }
-
-        // dispose ATP-D specific widgets
-        containerDBCompartmentLabel.dispose();
-        containerDBCompartmentText.dispose();
-        selectContainerDBCompartmentButton.dispose();
-        adcCompartmentContainer.dispose();
-        containerDBLabel.dispose();
-        containerDBList.dispose();
-        containertMap.clear();
-
-        createAlwaysFreeControl(container);
-        alwaysFreeLabel.moveBelow(dbNameRule1);
-        alwaysFreeCheckButton.moveBelow(alwaysFreeLabel);
-
-        createAutoScalingControl(container);
-        autoScalingEnabledCheckBox.moveAbove(adminUserNameLabel);
-        autoScalingLabel.moveAbove(autoScalingEnabledCheckBox);
-
-        createLicenseTypeControl(container);
-
-        alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                alwaysFreeButtonSelectionAction(event, container);
-            }
-        });
-
-        setControl(container);
-        container.layout();
-    }
-
-    private void dedicatedButtonSelection(Composite container) {
-        synchronized (lock) {
-            if (isDedicatedSelected)
-                return;
-            isDedicatedSelected = true;
-        }
-
-        // dispose ATP-S specific widgets
-        alwaysFreeLabel.dispose();
-        alwaysFreeCheckButton.dispose();
-        if (alwaysFreeStorageInTBText != null)
-            alwaysFreeStorageInTBText.dispose();
-
-        autoScalingLabel.dispose();
-        autoScalingEnabledCheckBox.dispose();
-        licenseTypeLabel.dispose();
-        licenseTypeGroup.dispose();
-        cpuCoreCountSpinner.setEnabled(true);
-        if (storageInTBSpinner.isDisposed()) {
-            // re-create the storage spinner
-            createStorageInTBSpinner(container);
-            storageInTBSpinner.moveBelow(storageInTBLabel);
-        } else {
-            storageInTBSpinner.setEnabled(true);
-        }
-
-        containerDBCompartmentLabel = new Label(container, SWT.NULL);
-        containerDBCompartmentLabel.setText("&ADC Compartment:");
-
-        adcCompartmentContainer = new Composite(container, SWT.NONE);
+		setControl(container);
+		isInitialized = true;
+	}
+	
+	private void serverlessButtonSelection(Composite container) {
+		synchronized (lock) {
+			if(!isDedicatedSelected)
+				return;
+			isDedicatedSelected = false;
+		}
+		
+		// dispose ATP-D specific widgets
+		containerDBCompartmentLabel.dispose();
+		containerDBCompartmentText.dispose();
+		selectContainerDBCompartmentButton.dispose();
+		adcCompartmentContainer.dispose();
+		containerDBLabel.dispose();
+		containerDBList.dispose();
+		containertMap.clear();
+		
+		createAlwaysFreeControl(container);
+		alwaysFreeLabel.moveBelow(dbNameRule1);
+		alwaysFreeCheckButton.moveBelow(alwaysFreeLabel);
+		
+		createAutoScalingControl(container);
+		autoScalingEnabledCheckBox.moveAbove(adminUserNameLabel);
+		autoScalingLabel.moveAbove(autoScalingEnabledCheckBox);
+		
+		createLicenseTypeControl(container);
+		
+		alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent event) {
+	        	alwaysFreeButtonSelectionAction(event, container);
+	        }
+	    });
+		
+		setControl(container);
+		container.layout();
+	}
+	
+	private void dedicatedButtonSelection(Composite container) {
+		synchronized (lock) {
+			if(isDedicatedSelected)
+				return;
+			isDedicatedSelected = true;
+		}
+		
+		// dispose ATP-S specific widgets
+		alwaysFreeLabel.dispose();
+		alwaysFreeCheckButton.dispose();
+		if(alwaysFreeStorageInTBText != null)
+			alwaysFreeStorageInTBText.dispose();
+		
+		autoScalingLabel.dispose();
+		autoScalingEnabledCheckBox.dispose();
+		licenseTypeLabel.dispose();
+		licenseTypeGroup.dispose();
+		cpuCoreCountSpinner.setEnabled(true);
+		if(storageInTBSpinner.isDisposed()) {
+			// re-create the storage spinner
+			createStorageInTBSpinner(container);
+			storageInTBSpinner.moveBelow(storageInTBLabel);
+		} else {
+			storageInTBSpinner.setEnabled(true);
+		}
+		
+		containerDBCompartmentLabel = new Label(container, SWT.NULL);
+		containerDBCompartmentLabel.setText("&ADC Compartment:");
+		
+		adcCompartmentContainer = new Composite(container, SWT.NONE);
         GridLayout innerTopLayout = new GridLayout();
         innerTopLayout.numColumns = 2;
         adcCompartmentContainer.setLayout(innerTopLayout);
@@ -392,261 +388,259 @@ public class CreateADBWizardPage extends WizardPage {
         selectContainerDBCompartmentButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                handleSelectContainerDBCompartmentEvent();
-                if (selectedContainerDBCompartment != null) {
-                    containerDBCompartmentText.setText(selectedContainerDBCompartment.getName());
-                }
-
+            	handleSelectContainerDBCompartmentEvent();
+            	if(selectedContainerDBCompartment !=null) {
+            		containerDBCompartmentText.setText(selectedContainerDBCompartment.getName());
+            	}
+            	
             }
         });
+		
+		containerDBLabel = new Label(container, SWT.NULL);
+		containerDBLabel.setText("&Database Container:");
+		containerDBList = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY);
+		GridData gd10 = new GridData(GridData.FILL_HORIZONTAL);
+		containerDBList.setLayoutData(gd10);
+		
+		containerDBList.clearSelection();
+		containerDBList.removeAll();
+		containertMap.clear();
+		
+		containertMap.putAll(ADBInstanceClient.getInstance()
+				.getContainerDatabaseMap(getContainerDBCompartmentId()));
+		
+		if (containertMap.size() > 0) {
+			for (String containerName : containertMap.keySet()) {
+				containerDBList.add(containerName);
+			}
+			containerDBList.select(0);
+		}
+		
+		setControl(container);
+		container.layout();
 
-        containerDBLabel = new Label(container, SWT.NULL);
-        containerDBLabel.setText("&Database Container:");
-        containerDBList = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY);
-        GridData gd10 = new GridData(GridData.FILL_HORIZONTAL);
-        containerDBList.setLayoutData(gd10);
-
-        containerDBList.clearSelection();
-        containerDBList.removeAll();
-        containertMap.clear();
-
-        containertMap.putAll(ADBInstanceClient.getInstance().getContainerDatabaseMap(getContainerDBCompartmentId()));
-
-        if (containertMap.size() > 0) {
-            for (String containerName : containertMap.keySet()) {
-                containerDBList.add(containerName);
-            }
-            containerDBList.select(0);
-        }
-
-        setControl(container);
-        container.layout();
-
-        containerDBCompartmentText.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent event) {
-                // Get the widget whose text was modified
-                //Text text = (Text) event.widget;
-                if (isDedicatedInfra()) {
-                    containerDBList.clearSelection();
-                    containerDBList.removeAll();
-                    containertMap.clear();
-                    containertMap.putAll(
-                            ADBInstanceClient.getInstance().getContainerDatabaseMap(getContainerDBCompartmentId()));
-                    if (containertMap.size() > 0) {
-                        for (String containerName : containertMap.keySet()) {
-                            containerDBList.add(containerName);
-                        }
-                        containerDBList.select(0);
-                    }
-                }
-
-            }
-        });
-    }
-
-    private void alwaysFreeButtonSelectionAction(SelectionEvent event, Composite container) {
+		containerDBCompartmentText.addModifyListener(new ModifyListener(){
+		      public void modifyText(ModifyEvent event) {
+				if (isDedicatedInfra()) {
+					containerDBList.clearSelection();
+					containerDBList.removeAll();
+					containertMap.clear();
+					containertMap.putAll(ADBInstanceClient.getInstance()
+							.getContainerDatabaseMap(getContainerDBCompartmentId()));
+					if (containertMap.size() > 0) {
+						for (String containerName : containertMap.keySet()) {
+							containerDBList.add(containerName);
+						}
+						containerDBList.select(0);
+					}
+				}
+			
+		      }
+		    });
+	}
+	
+	private void alwaysFreeButtonSelectionAction(SelectionEvent event, Composite container) {
         Button btn = (Button) event.getSource();
-        if (btn.getSelection()) {
-            storageInTBSpinner.dispose();
-            alwaysFreeStorageInTBText = new Text(container, SWT.BORDER | SWT.SINGLE);
-            GridData gdFreeStorage = new GridData(GridData.FILL_HORIZONTAL);
-            alwaysFreeStorageInTBText.setLayoutData(gdFreeStorage);
-            alwaysFreeStorageInTBText.setText(ADBConstants.ALWAYS_FREE_STORAGE_TB);
-            alwaysFreeStorageInTBText.setEditable(false);
-            alwaysFreeStorageInTBText.moveBelow(storageInTBLabel);
-            setControl(container);
-            container.layout();
-
-            cpuCoreCountSpinner.setSelection(ADBConstants.ALWAYS_FREE_CPU_CORE_COUNT);
-            cpuCoreCountSpinner.setEnabled(false);
-            autoScalingEnabledCheckBox.setSelection(false);
-            autoScalingEnabledCheckBox.setEnabled(false);
-            licenseTypeOwnRadioButton.setSelection(false);
-            licenseTypeIncludedRadioButton.setSelection(true);
-            licenseTypeOwnRadioButton.setEnabled(false);
-            licenseTypeIncludedRadioButton.setEnabled(false);
-            licenseTypeGroup.setEnabled(false);
+        if(btn.getSelection()) {
+        	storageInTBSpinner.dispose();
+        	alwaysFreeStorageInTBText = new Text(container, SWT.BORDER | SWT.SINGLE);
+    		GridData gdFreeStorage = new GridData(GridData.FILL_HORIZONTAL);
+    		alwaysFreeStorageInTBText.setLayoutData(gdFreeStorage);
+    		alwaysFreeStorageInTBText.setText(ADBConstants.ALWAYS_FREE_STORAGE_TB);
+    		alwaysFreeStorageInTBText.setEditable(false);
+    		alwaysFreeStorageInTBText.moveBelow(storageInTBLabel);
+    		setControl(container);
+			container.layout();
+			
+			cpuCoreCountSpinner.setSelection(ADBConstants.ALWAYS_FREE_CPU_CORE_COUNT);
+        	cpuCoreCountSpinner.setEnabled(false);
+        	autoScalingEnabledCheckBox.setSelection(false);
+        	autoScalingEnabledCheckBox.setEnabled(false);
+        	licenseTypeOwnRadioButton.setSelection(false);
+        	licenseTypeIncludedRadioButton.setSelection(true);
+        	licenseTypeOwnRadioButton.setEnabled(false);
+        	licenseTypeIncludedRadioButton.setEnabled(false);
+        	licenseTypeGroup.setEnabled(false);
         } else {
-            alwaysFreeStorageInTBText.dispose();
-            createStorageInTBSpinner(container);
-            storageInTBSpinner.moveBelow(storageInTBLabel);
-            setControl(container);
-            container.layout();
-
-            cpuCoreCountSpinner.setSelection(ADBConstants.CPU_CORE_COUNT_DEFAULT);
-            cpuCoreCountSpinner.setEnabled(true);
-            autoScalingEnabledCheckBox.setSelection(false);
-            autoScalingEnabledCheckBox.setEnabled(true);
-            licenseTypeIncludedRadioButton.setSelection(false);
-            licenseTypeOwnRadioButton.setSelection(true);
-            licenseTypeOwnRadioButton.setEnabled(true);
-            licenseTypeIncludedRadioButton.setEnabled(true);
-            licenseTypeGroup.setEnabled(true);
+        	alwaysFreeStorageInTBText.dispose();
+        	createStorageInTBSpinner(container);
+    		storageInTBSpinner.moveBelow(storageInTBLabel);
+    		setControl(container);
+			container.layout();
+        	
+			cpuCoreCountSpinner.setSelection(ADBConstants.CPU_CORE_COUNT_DEFAULT);
+        	cpuCoreCountSpinner.setEnabled(true);
+        	autoScalingEnabledCheckBox.setSelection(false);
+        	autoScalingEnabledCheckBox.setEnabled(true);
+        	licenseTypeIncludedRadioButton.setSelection(false);
+        	licenseTypeOwnRadioButton.setSelection(true);
+        	licenseTypeOwnRadioButton.setEnabled(true);
+        	licenseTypeIncludedRadioButton.setEnabled(true);
+        	licenseTypeGroup.setEnabled(true);
         }
-    }
-
-    private void createAlwaysFreeControl(Composite container) {
-        if (workloadType == DbWorkload.Ajd)
-            return;
-
-        alwaysFreeLabel = new Label(container, SWT.NULL);
-        alwaysFreeLabel.setText("Always Free");
-        alwaysFreeCheckButton = new Button(container, SWT.CHECK);
-        alwaysFreeCheckButton.setText("Show only Always Free configuration options");
-        GridData alwaysFreeGD = new GridData(GridData.FILL_HORIZONTAL);
-        alwaysFreeCheckButton.setLayoutData(alwaysFreeGD);
-    }
-
-    private void createStorageInTBSpinner(Composite container) {
-        storageInTBSpinner = new Spinner(container, SWT.BORDER | SWT.SINGLE);
-        GridData gd4 = new GridData(GridData.FILL_HORIZONTAL);
-        storageInTBSpinner.setLayoutData(gd4);
-        storageInTBSpinner.setMinimum(ADBConstants.STORAGE_IN_TB_MIN);
-        storageInTBSpinner.setMaximum(ADBConstants.STORAGE_IN_TB_MAX);
-        storageInTBSpinner.setIncrement(ADBConstants.STORAGE_IN_TB_INCREMENT);
-        // default value
-        storageInTBSpinner.setSelection(ADBConstants.STORAGE_IN_TB_DEFAULT);
-    }
-
-    private void createAutoScalingControl(Composite container) {
-        autoScalingLabel = new Label(container, SWT.NULL);
-        autoScalingLabel.setText("&Auto Scaling:");
-        autoScalingEnabledCheckBox = new Button(container, SWT.CHECK);
-        autoScalingEnabledCheckBox.setText("Enable auto scaling");
-        GridData gd5 = new GridData(GridData.FILL_HORIZONTAL);
-        autoScalingEnabledCheckBox.setLayoutData(gd5);
-    }
-
-    private void createLicenseTypeControl(Composite container) {
-        licenseTypeLabel = new Label(container, SWT.NULL);
-        licenseTypeLabel.setText("&Choose a license type:");
-        licenseTypeGroup = new Group(container, SWT.NONE);
-        RowLayout rowLayout1 = new RowLayout(SWT.HORIZONTAL);
+	}
+	
+	private void createAlwaysFreeControl(Composite container) {
+		if(workloadType == DbWorkload.Ajd)
+	      return;
+		
+		alwaysFreeLabel = new Label(container, SWT.NULL);
+		alwaysFreeLabel.setText("Always Free");
+		alwaysFreeCheckButton = new Button(container, SWT.CHECK);
+		alwaysFreeCheckButton.setText("Show only Always Free configuration options");
+		GridData alwaysFreeGD = new GridData(GridData.FILL_HORIZONTAL);
+		alwaysFreeCheckButton.setLayoutData(alwaysFreeGD);
+	}
+	
+	private void createStorageInTBSpinner(Composite container) {
+		storageInTBSpinner = new Spinner(container, SWT.BORDER | SWT.SINGLE);
+		GridData gd4 = new GridData(GridData.FILL_HORIZONTAL);
+		storageInTBSpinner.setLayoutData(gd4);
+		storageInTBSpinner.setMinimum(ADBConstants.STORAGE_IN_TB_MIN);
+		storageInTBSpinner.setMaximum(ADBConstants.STORAGE_IN_TB_MAX);
+		storageInTBSpinner.setIncrement(ADBConstants.STORAGE_IN_TB_INCREMENT);
+		// default value
+		storageInTBSpinner.setSelection(ADBConstants.STORAGE_IN_TB_DEFAULT);
+	}
+	
+	private void createAutoScalingControl(Composite container) {
+		autoScalingLabel = new Label(container, SWT.NULL);
+		autoScalingLabel.setText("&Auto Scaling:");
+		autoScalingEnabledCheckBox = new Button(container, SWT.CHECK);
+		autoScalingEnabledCheckBox.setText("Enable auto scaling");
+		GridData gd5 = new GridData(GridData.FILL_HORIZONTAL);
+		autoScalingEnabledCheckBox.setLayoutData(gd5);
+	}
+	
+	private void createLicenseTypeControl(Composite container) {
+		licenseTypeLabel = new Label(container, SWT.NULL);
+		licenseTypeLabel.setText("&Choose a license type:");
+		licenseTypeGroup = new Group(container, SWT.NONE);
+		RowLayout rowLayout1 = new RowLayout(SWT.HORIZONTAL);
         rowLayout1.spacing = 100;
-        licenseTypeGroup.setLayout(rowLayout1);
-        GridData gd9 = new GridData(GridData.FILL_HORIZONTAL);
-        licenseTypeGroup.setLayoutData(gd9);
-        licenseTypeOwnRadioButton = new Button(licenseTypeGroup, SWT.RADIO);
-        licenseTypeOwnRadioButton.setText("Bring Your Own License");
-        licenseTypeIncludedRadioButton = new Button(licenseTypeGroup, SWT.RADIO);
-        licenseTypeIncludedRadioButton.setText("License Included");
-
-        if (workloadType == DbWorkload.Ajd) {
-            licenseTypeOwnRadioButton.setEnabled(false);
-            licenseTypeIncludedRadioButton.setSelection(true);
-        } else {
-            licenseTypeOwnRadioButton.setSelection(true);
-        }
+		licenseTypeGroup.setLayout(rowLayout1);
+		GridData gd9 = new GridData(GridData.FILL_HORIZONTAL);
+		licenseTypeGroup.setLayoutData(gd9);
+		licenseTypeOwnRadioButton = new Button(licenseTypeGroup, SWT.RADIO);
+		licenseTypeOwnRadioButton.setText("Bring Your Own License");
+		licenseTypeIncludedRadioButton = new Button(licenseTypeGroup, SWT.RADIO);
+		licenseTypeIncludedRadioButton.setText("License Included");
+		
+		if(workloadType == DbWorkload.Ajd) {
+			licenseTypeOwnRadioButton.setEnabled(false);
+			licenseTypeIncludedRadioButton.setSelection(true);
+		} else {
+			licenseTypeOwnRadioButton.setSelection(true);
+		}
+	}
+	
+	private void handleSelectADBCompartmentEvent() {
+    	Consumer<Compartment> consumer=new Consumer<Compartment>() {
+			@Override
+			public void accept(Compartment compartment) {
+				if (compartment != null) {
+					selectedADBCompartment = compartment;
+					compartmentText.setText(selectedADBCompartment.getName());
+				}
+			}
+		};
+    	CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
+				new CompartmentSelectWizard(consumer, false));
+		dialog.setFinishButtonText("Select");
+		if (Window.OK == dialog.open()) {
+		}
     }
+	
+	private void handleSelectContainerDBCompartmentEvent() {
+    	Consumer<Compartment> consumer=new Consumer<Compartment>() {
 
-    private void handleSelectADBCompartmentEvent() {
-        Consumer<Compartment> consumer = new Consumer<Compartment>() {
-            @Override
-            public void accept(Compartment compartment) {
-                if (compartment != null) {
-                    selectedADBCompartment = compartment;
-                    compartmentText.setText(selectedADBCompartment.getName());
-                }
-            }
-        };
-        CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
-                new CompartmentSelectWizard(consumer, false));
-        dialog.setFinishButtonText("Select");
-        if (Window.OK == dialog.open()) {
-        }
+			@Override
+			public void accept(Compartment compartment) {
+				selectedContainerDBCompartment = compartment;
+			}
+		};
+    	CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
+				new CompartmentSelectWizard(consumer, false));
+		dialog.setFinishButtonText("Select");
+		if (Window.OK == dialog.open()) {
+		}
     }
+	public String getDisplayName() {
+		return displayNameText.getText();
+	}
 
-    private void handleSelectContainerDBCompartmentEvent() {
-        Consumer<Compartment> consumer = new Consumer<Compartment>() {
+	public String getDatabaseName() {
+		return databaseNameText.getText();
+	}
 
-            @Override
-            public void accept(Compartment compartment) {
-                selectedContainerDBCompartment = compartment;
-            }
-        };
-        CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
-                new CompartmentSelectWizard(consumer, false));
-        dialog.setFinishButtonText("Select");
-        if (Window.OK == dialog.open()) {
-        }
-    }
+	public String getAdminPassword() {
+		return adminPasswordText.getText();
+	}
 
-    public String getDisplayName() {
-        return displayNameText.getText();
-    }
+	public String getConfirmAdminPassword() {
+		return confirmAdminPasswordText.getText();
+	}
 
-    public String getDatabaseName() {
-        return databaseNameText.getText();
-    }
+	public Boolean isAutoScalingEnabled() {
+		if(isDedicatedInfra())
+			return null;
+		
+		return autoScalingEnabledCheckBox.getSelection();
+	}
 
-    public String getAdminPassword() {
-        return adminPasswordText.getText();
-    }
+	public LicenseModel getLicenseModel() {
+		if(isDedicatedInfra())
+			return null;
+		
+		if (licenseTypeIncludedRadioButton.getSelection()) {
+			return LicenseModel.LicenseIncluded;
+		} else {
+			return LicenseModel.BringYourOwnLicense;
+		}
+	}
 
-    public String getConfirmAdminPassword() {
-        return confirmAdminPasswordText.getText();
-    }
+	public String getCPUCoreCount() {
+		return cpuCoreCountSpinner.getText();
+	}
 
-    public Boolean isAutoScalingEnabled() {
-        if (isDedicatedInfra())
-            return null;
+	public String getStorageInTB() {
+		if(isAlwaysFreeInstance())
+			return ADBConstants.ALWAYS_FREE_STORAGE_TB_DUMMY;
+		return storageInTBSpinner.getText();
+	}
 
-        return autoScalingEnabledCheckBox.getSelection();
-    }
+	public String getADBCompartmentId() {
+		return selectedADBCompartment.getId();
+	}
 
-    public LicenseModel getLicenseModel() {
-        if (isDedicatedInfra())
-            return null;
+	public boolean isDedicatedInfra() {
+		if (workloadType == DbWorkload.Oltp) {
+			return dedicatedDeploymentRadioButton.getSelection();
+		}
+		return false;
+	}
+	
+	public String getContainerDBCompartmentId() {
+		if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
+			return selectedContainerDBCompartment.getId();
+		}
+		return null;
+	}
 
-        if (licenseTypeIncludedRadioButton.getSelection()) {
-            return LicenseModel.LicenseIncluded;
-        } else {
-            return LicenseModel.BringYourOwnLicense;
-        }
-    }
-
-    public String getCPUCoreCount() {
-        return cpuCoreCountSpinner.getText();
-    }
-
-    public String getStorageInTB() {
-        if (isAlwaysFreeInstance())
-            return ADBConstants.ALWAYS_FREE_STORAGE_TB_DUMMY;
-        return storageInTBSpinner.getText();
-    }
-
-    public String getADBCompartmentId() {
-        return selectedADBCompartment.getId();
-    }
-
-    public boolean isDedicatedInfra() {
-        if (workloadType == DbWorkload.Oltp) {
-            return dedicatedDeploymentRadioButton.getSelection();
-        }
-        return false;
-    }
-
-    public String getContainerDBCompartmentId() {
-        if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
-            return selectedContainerDBCompartment.getId();
-        }
-        return null;
-    }
-
-    public String getSelectedContainerDbId() {
-        if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
-            return containertMap.get(containerDBList.getText());
-        }
-        return null;
-    }
-
-    public boolean isAlwaysFreeInstance() {
-        if ((workloadType == DbWorkload.Ajd)
-                || (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection())) {
-            return false;
-        }
-        return alwaysFreeCheckButton.getSelection();
-    }
+	public String getSelectedContainerDbId() {
+		if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
+			return containertMap.get(containerDBList.getText());
+		}
+		return null;
+	}
+	
+	public boolean isAlwaysFreeInstance() {
+		if ((workloadType == DbWorkload.Ajd) || 
+		  (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection())) {
+			return false;
+		}
+		return alwaysFreeCheckButton.getSelection();
+	}
 
     private void updateStatus(IStatus status) {
         IStatus fullStatus = status;
