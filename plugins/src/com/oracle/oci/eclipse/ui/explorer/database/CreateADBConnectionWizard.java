@@ -47,15 +47,17 @@ public class CreateADBConnectionWizard  extends Wizard implements INewWizard {
     	final String password = page.getPassword();
     	final String walletLocation = page.getWalletDirectory();
     	final String aliasName = page.getSelectedAlias();
+    	final boolean autoConnect = page.isAutoConnectProfile();  // no need to validate
     	
-    	if(!validateInput(user, password, walletLocation, aliasName))
+    	if(!validateInput(user, password, walletLocation, aliasName)) {
     		return false;
+    	}
     	
     	IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					ConfigureADBConnectionProfile.createConnectionProfile(monitor, adbInstance, user, password,walletLocation, aliasName);
+					ConfigureADBConnectionProfile.createConnectionProfile(monitor, adbInstance, user, password,walletLocation, aliasName, autoConnect);
 				} catch (Exception e) {
 					ErrorHandler.logErrorStack("Error occured while creating connection to database: " + adbInstance.getDbName(), e);
 					throw new InvocationTargetException(e);
@@ -66,7 +68,7 @@ public class CreateADBConnectionWizard  extends Wizard implements INewWizard {
         };
         
         try {
-            getContainer().run(true, false, op);
+            getContainer().run(true, true, op);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
