@@ -269,6 +269,30 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 	    return autoConnectCheckBox.getSelection();
 	}
 
+	public MultiStatus validate()
+	{
+	    MultiStatus multiStatus = new MultiStatus(getClass(), 0, "");
+	    IStatus status = validatePassword(getPassword());
+	    if (!status.isOK())
+	    {
+	        multiStatus.add(status);
+	    }
+	    status = validateWalletDirectory(getWalletDirectory());
+	    if (!status.isOK())
+	    {
+	        multiStatus.add(status);
+	    }
+	    return multiStatus;
+	}
+	private IStatus validatePassword(String password)
+	{
+	    if (password == null || password.trim().isEmpty())
+	    {
+	        return new Status(IStatus.ERROR, getClass(), "Password cannot be blank");
+	    }
+	    return Status.OK_STATUS;
+	}
+	
 	private IStatus validateWalletDirectory(String walletDirStr)
 	{
 	    if (walletDirStr == null || walletDirStr.trim().isEmpty())
