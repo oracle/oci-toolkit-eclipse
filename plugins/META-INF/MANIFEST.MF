@@ -17,8 +17,12 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.datatools.connectivity;resolution:=optional,
  org.eclipse.datatools.connectivity.ui;resolution:=optional,
  org.eclipse.datatools.connectivity.ui.dse;resolution:=optional,
- org.eclipse.equinox.security,
- org.eclipse.osgi
+ org.eclipse.equinox.security;visibility:=reexport,
+ org.eclipse.osgi,
+ org.eclipse.datatools.enablement.oracle;bundle-version="1.2.101",
+ org.eclipse.datatools.enablement.oracle.dbdefinition;bundle-version="1.2.101",
+ org.eclipse.datatools.enablement.oracle.ui;bundle-version="1.2.101",
+ org.eclipse.osgi.services
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/sdk/oci-java-sdk-full-1.23.0.jar,
@@ -64,5 +68,7 @@ Export-Package: com.oracle.bmc.core.model,
  com.oracle.oci.eclipse.ui.explorer,
  com.oracle.oci.eclipse.ui.explorer.common,
  com.oracle.oci.eclipse.ui.explorer.compute,
+ com.oracle.oci.eclipse.ui.explorer.database,
+ com.oracle.oci.eclipse.ui.explorer.database.actions,
  com.oracle.oci.eclipse.ui.explorer.objectstorage
 Import-Package: org.eclipse.core.net.proxy
