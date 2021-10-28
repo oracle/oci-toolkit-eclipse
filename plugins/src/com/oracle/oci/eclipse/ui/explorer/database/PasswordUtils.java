@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.util.ArrayList;
@@ -18,7 +22,7 @@ import com.oracle.oci.eclipse.ui.explorer.database.validate.PasswordInputValidat
 public class PasswordUtils {
 
     public static MultiStatus validate(Text adminPasswordText, Text confirmPasswordText) {
-        MultiStatus multiStatus = new MultiStatus(PasswordUtils.class, 0, "");
+        MultiStatus multiStatus = new MultiStatus(Activator.PLUGIN_ID, 0, "", null);
         IStatus status = validatePasswords(adminPasswordText, confirmPasswordText);
         if (!status.isOK()) {
             multiStatus.add(status);

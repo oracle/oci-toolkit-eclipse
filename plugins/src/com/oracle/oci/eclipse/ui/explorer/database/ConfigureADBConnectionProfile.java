@@ -232,7 +232,7 @@ public class ConfigureADBConnectionProfile {
             StatusManager.getManager().handle(status, StatusManager.BLOCK | StatusManager.LOG);
             return connectStatus;
         }
-        return connectStatus == null ? new Status(IStatus.ERROR, ConfigureADBConnectionProfile.class, "Error connecting the profile") : connectStatus;
+        return connectStatus == null ? new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error connecting the profile") : connectStatus;
     }
     
 }

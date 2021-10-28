@@ -23,9 +23,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -656,7 +653,7 @@ public class CreateADBWizardPage extends WizardPage {
                 MultiStatus multiStatus = (MultiStatus) status;
                 for (IStatus child : multiStatus.getChildren()) {
                     if (!child.isOK()) {
-                        fullStatus = new Status(child.getSeverity(), getClass(), child.getMessage());
+                        fullStatus = new Status(child.getSeverity(), Activator.PLUGIN_ID, child.getMessage());
                     }
                 }
             }
@@ -676,7 +673,7 @@ public class CreateADBWizardPage extends WizardPage {
     }
 
     public MultiStatus validate() {
-        MultiStatus multiStatus = new MultiStatus(getClass(), 0, "");
+        MultiStatus multiStatus = new MultiStatus(Activator.PLUGIN_ID, 0, "", null);
         IStatus status = validatePasswords();
         if (!status.isOK()) {
             multiStatus.add(status);

@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.oci.eclipse.Activator;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.PreferencesWrapper;
 
@@ -255,7 +256,7 @@ public class CreateADBConnectionWizardPage extends WizardPage {
                 MultiStatus multiStatus = (MultiStatus) status;
                 for (IStatus child : multiStatus.getChildren()) {
                     if (!child.isOK()) {
-                        fullStatus = new Status(child.getSeverity(), getClass(), child.getMessage());
+                        fullStatus = new Status(child.getSeverity(), Activator.PLUGIN_ID, child.getMessage());
                     }
                 }
             }
@@ -294,7 +295,7 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 
 	public MultiStatus validate()
 	{
-	    MultiStatus multiStatus = new MultiStatus(getClass(), 0, "");
+	    MultiStatus multiStatus = new MultiStatus(Activator.PLUGIN_ID, 0, "", null);
 	    IStatus status = validatePassword(getPassword());
 	    if (!status.isOK())
 	    {
@@ -311,7 +312,7 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 	{
 	    if (password == null || password.trim().isEmpty())
 	    {
-	        return new Status(IStatus.ERROR, getClass(), "Password cannot be blank");
+	        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Password cannot be blank");
 	    }
 	    return Status.OK_STATUS;
 	}
@@ -320,16 +321,16 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 	{
 	    if (walletDirStr == null || walletDirStr.trim().isEmpty())
 	    {
-	        return new Status(IStatus.ERROR, getClass(), "Wallet Directory cannot be empty");
+	        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Wallet Directory cannot be empty");
 	    }
 	    File walletDir = new File(walletDirStr);
 	    if (!walletDir.isDirectory())
 	    {
-	        return new Status(IStatus.ERROR, getClass(), String.format("%s must be an accessible directory", walletDirStr));
+	        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, String.format("%s must be an accessible directory", walletDirStr));
 	    }
 	    File tnsOraFile = getTnsOraFile(walletDirStr);
 	    if (!tnsOraFile.exists()) {
-	        return new Status(IStatus.ERROR, getClass(), 
+	        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 
 	                String.format("Can't find tnsnames.ora in wallet directory %s", walletDirStr));
 	    }
 	    return Status.OK_STATUS;
