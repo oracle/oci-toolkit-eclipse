@@ -687,7 +687,7 @@ public class CreateADBWizardPage extends WizardPage {
     private static final InputValidator<String> passwordInputValidator = new InputValidator<String>() {
         @Override
         public IStatus validate(String inputValue) {
-            if (inputValue == null || inputValue.isBlank()) {
+            if (inputValue == null || inputValue.trim().isEmpty()) {
                 return error("Passwords can't be empty");
             }
             if (inputValue.length() < 12 || inputValue.length() > 30) {
