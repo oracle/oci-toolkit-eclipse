@@ -35,7 +35,7 @@
              </fileset>
              <chainedmapper>
                  <mapper type="flatten" />
-                 <mapper type="glob" from="*" to=' @{prefix}/*,' />
+                 <mapper type="glob" from="*" to=' ,@{prefix}/*' />
              </chainedmapper>
           </pathconvert>
           <replace file="@{manifestdir}/MANIFEST.MF" token="@{token}" value="${fileList}"/>
