@@ -1,0 +1,58 @@
+<project name="gendeps" default="updateAll">
+    <property name="sdkJarDir" value="../plugins/lib/sdk"/>
+
+    <macrodef name="listClasspathEntryJars">
+       <attribute name="libdir"/>
+       <attribute name="plugindir" default="."/>
+       <attribute name="prefix" />
+       <attribute name="token" />
+       <sequential>
+          <local name="fileList" />
+          <pathconvert pathsep="&#xA;" property="fileList">
+             <fileset dir="@{libdir}" casesensitive="yes">
+                <include name="**/*.jar"/>
+             </fileset>
+             <chainedmapper>
+                 <mapper type="flatten" />
+                 <mapper type="glob" from="*" to='&#x9;&lt;classpathentry exported="true" kind="lib" path="@{prefix}/*" /&gt;' />
+             </chainedmapper>
+          </pathconvert>
+          <replace file="@{plugindir}/.classpath" token="@{token}" value="${fileList}"/>
+          <echo>${fileList}</echo>    
+       </sequential>
+    </macrodef>
+
+    <macrodef name="listManifestEntryJars">
+       <attribute name="libdir"/>
+       <attribute name="manifestdir" default="META-INF"/>
+       <attribute name="prefix" />
+       <attribute name="token" />
+       <sequential>
+          <local name="fileList" />
+          <pathconvert pathsep="&#xA;" property="fileList">
+             <fileset dir="@{libdir}" casesensitive="yes">
+                <include name="**/*.jar"/>
+             </fileset>
+             <chainedmapper>
+                 <mapper type="flatten" />
+                 <mapper type="glob" from="*" to=' @{prefix}/*,' />
+             </chainedmapper>
+          </pathconvert>
+          <replace file="@{manifestdir}/MANIFEST.MF" token="@{token}" value="${fileList}"/>
+          <echo>${fileList}</echo>    
+       </sequential>
+    </macrodef>
+
+    <target name="updateClasspathEntries">
+        <copy file="tmpl/dotClasspath.tmpl" tofile="../plugins/.classpath" overwrite="true" />
+        <listClasspathEntryJars libdir="lib/sdk" prefix="lib/sdk" token="##TEMPLATE_REPLACE_OCI_LIBS##" />
+        <listClasspathEntryJars libdir="lib/thirdparty" prefix="lib/thirdparty" token="##TEMPLATE_REPLACE_OCI_LIB_DEPENDENCIES##" />
+    </target>
+    <target name="updateManifestEntries">
+        <copy file="tmpl/manifestMf.tmpl" tofile="../plugins/META-INF/MANIFEST.MF" overwrite="true" />
+        <listManifestEntryJars libdir="lib/sdk" prefix="lib/sdk" token="##TEMPLATE_REPLACE_OCI_SDK_MANIFEST##" />
+        <listManifestEntryJars libdir="lib/thirdparty" prefix="lib/thirdparty" token="##TEMPLATE_REPLACE_OCI_SDK_MANIFEST_THIRDPARTY##" />
+    </target>
+
+    <target name="updateAll" depends="updateClasspathEntries,updateManifestEntries" />
+</project>
