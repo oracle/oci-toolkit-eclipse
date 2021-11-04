@@ -1,9 +1,22 @@
 <project name="gendeps" default="updateAll">
-    <property name="sdkJarDir" value="../plugins/lib/sdk"/>
+	
+	<property name="templateDir" value="tmpl" />
+	<property name="dotClassPathTmpl" value="${templateDir}/dotClasspath.tmpl" />
+	<property name="manifestMf.tmpl" value="${templateDir}/manifestMf.tmpl" />
+	
+	<property name="lib" value="lib" />
+	<property name="libSdk" value="${lib}/sdk" />
+	<property name="libThirdParty" value="${lib}/thirdparty" />
+	
+	<property name="classPath" value=".classpath" />
+	
+	<property name="templateReplaceOciLibs"  value="##TEMPLATE_REPLACE_OCI_LIBS##" />
+	<property name="templateReplaceOciLibDeps" value="##TEMPLATE_REPLACE_OCI_LIB_DEPENDENCIES##" />
+	<property name="templateReplaceOciSdkManifest" value="##TEMPLATE_REPLACE_OCI_SDK_MANIFEST##" />
+	<property name="templateReplaceOciSdkManifestThirdParty" value="##TEMPLATE_REPLACE_OCI_SDK_MANIFEST_THIRDPARTY##" />
 
-    <macrodef name="listClasspathEntryJars">
+	<macrodef name="listClasspathEntryJars">
        <attribute name="libdir"/>
-       <attribute name="plugindir" default="."/>
        <attribute name="prefix" />
        <attribute name="token" />
        <sequential>
@@ -17,7 +30,7 @@
                  <mapper type="glob" from="*" to='&#x9;&lt;classpathentry exported="true" kind="lib" path="@{prefix}/*" /&gt;' />
              </chainedmapper>
           </pathconvert>
-          <replace file="@{plugindir}/.classpath" token="@{token}" value="${fileList}"/>
+          <replace file="${classPath}" token="@{token}" value="${fileList}"/>
           <echo>${fileList}</echo>    
        </sequential>
     </macrodef>
@@ -44,14 +57,14 @@
     </macrodef>
 
     <target name="updateClasspathEntries">
-        <copy file="tmpl/dotClasspath.tmpl" tofile="../plugins/.classpath" overwrite="true" />
-        <listClasspathEntryJars libdir="lib/sdk" prefix="lib/sdk" token="##TEMPLATE_REPLACE_OCI_LIBS##" />
-        <listClasspathEntryJars libdir="lib/thirdparty" prefix="lib/thirdparty" token="##TEMPLATE_REPLACE_OCI_LIB_DEPENDENCIES##" />
+        <copy file="${dotClassPathTmpl}" tofile="${classPath}" overwrite="true" />
+        <listClasspathEntryJars libdir="${libSdk}" prefix="${libSdk}" token="${templateReplaceOciLibs}" />
+        <listClasspathEntryJars libdir="${libThirdParty}" prefix="${libThirdParty}" token="${templateReplaceOciLibDeps}" />
     </target>
     <target name="updateManifestEntries">
         <copy file="tmpl/manifestMf.tmpl" tofile="../plugins/META-INF/MANIFEST.MF" overwrite="true" />
-        <listManifestEntryJars libdir="lib/sdk" prefix="lib/sdk" token="##TEMPLATE_REPLACE_OCI_SDK_MANIFEST##" />
-        <listManifestEntryJars libdir="lib/thirdparty" prefix="lib/thirdparty" token="##TEMPLATE_REPLACE_OCI_SDK_MANIFEST_THIRDPARTY##" />
+        <listManifestEntryJars libdir="${libSdk}" prefix="${libSdk}" token="${templateReplaceOciSdkManifest}" />
+        <listManifestEntryJars libdir="${libThirdParty}" prefix="${libThirdParty}" token="${templateReplaceOciSdkManifestThirdParty}" />
     </target>
 
     <target name="updateAll" depends="updateClasspathEntries,updateManifestEntries" />
