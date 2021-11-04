@@ -37,10 +37,13 @@ To contribute, see [CONTRIBUTING](/CONTRIBUTING.md) for details.
 
 After you clone the repository on GitHub, you will need to build the Toolkit using Maven artifacts that are included with the [OCI Java SDK release](https://github.com/oracle/oci-java-sdk/releases).
 
-1. Extract the Java SDK release.
-2. Copy the dependency JARs from the Java SDK located in `/lib` and `/thirdparty` to the Toolkit under `/plugins/lib`.
-3. Verify that the JARs' versions match the library versions listed in `oci-toolkit-eclipse/plugins/META-INF/MANIFEST.MF`.
-4. At the command line, run `mvn package`.
+1. Change directory to plugins. 
+2. Run 'mvn -P updatesdk clean process-sources' to copy the needed jar files under plugins/lib.
+3. Load the project in Eclipse and verify the classpath and META-INF/MANIFEST file don't have errors.
+4. If there are errors then .classpath and/or META-INF/MANIFEST.MF are out of sync with /lib. Do step 5.  If no errors, skip to step 6.
+5. In the plugins directory, run 'mvn -P updateClasspath process-sources' to update .classpath and META-INF/MANIFEST.MF.
+5a. Recheck the project for errors.
+6. Change directory to the parent (the root of the repo) and run 'mvn package'.
 
 ## Blog Announcements
 

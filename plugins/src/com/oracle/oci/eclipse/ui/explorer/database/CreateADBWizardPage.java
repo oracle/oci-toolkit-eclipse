@@ -649,7 +649,7 @@ public class CreateADBWizardPage extends WizardPage {
                 MultiStatus multiStatus = (MultiStatus) status;
                 for (IStatus child : multiStatus.getChildren()) {
                     if (!child.isOK()) {
-                        fullStatus = new Status(child.getSeverity(), getClass(), child.getMessage());
+                        fullStatus = new Status(child.getSeverity(), Activator.PLUGIN_ID, child.getMessage());
                     }
                 }
             }
@@ -669,7 +669,7 @@ public class CreateADBWizardPage extends WizardPage {
     }
 
     public MultiStatus validate() {
-        MultiStatus multiStatus = new MultiStatus(getClass(), 0, "");
+        MultiStatus multiStatus = new MultiStatus(Activator.PLUGIN_ID, 0, "", null);
         IStatus status = validatePasswords();
         if (!status.isOK()) {
             multiStatus.add(status);
