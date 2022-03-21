@@ -261,40 +261,20 @@ public class ADBInstanceTable  extends BaseTable {
         } else {
             workload = DbWorkload.UnknownEnumValue;
         }
-        Job instanceListJob = new Job("Get ADB Instances") {
+        new Job("Get ADB Instances") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
-                    monitor.beginTask("Requesting ADB Instance", 100);
                     ADBInstanceClient oci = ADBInstanceClient.getInstance();
-                    monitor.worked(5);
                     instanceList = oci.getInstances(workload);
-                    monitor.worked(90);
                     tableDataSize = instanceList.size();
-                    refresh(false);
-                    monitor.worked(5);
                 } catch (Exception e) {
                     return ErrorHandler.reportException(e.getMessage(), e);
                 }
-                finally
-                {
-                    if (!monitor.isCanceled())
-                    {
-                        monitor.done();
-                    }
-                }
+                refresh(false);
                 return Status.OK_STATUS;
             }
-
-            @Override
-            protected void canceling() {
-                ErrorHandler.logInfo("User cancelled ADB instance list request");
-            }
-            
-            
-        };
-
-        instanceListJob.schedule();
+        }.schedule();
         return instanceList;
     }
 
