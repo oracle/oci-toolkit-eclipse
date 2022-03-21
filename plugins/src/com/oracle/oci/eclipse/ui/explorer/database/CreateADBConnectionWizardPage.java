@@ -6,14 +6,12 @@ package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -41,7 +39,6 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 	private Text passwordText;
 	private Text walletDirText;
 	private AutonomousDatabaseSummary adbInstance;
-    private Button autoConnectCheckBox;
 
 	public CreateADBConnectionWizardPage(AutonomousDatabaseSummary adbInstance) {
 		super("wizardPage");
@@ -90,8 +87,7 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 
         walletDirText = new Text(innerContainer, SWT.BORDER | SWT.SINGLE);
         walletDirText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        //walletDirText.setEditable(true);
-        
+        walletDirText.setEditable(false);
         
         walletDirText.addModifyListener(new ModifyListener() {
             @Override
@@ -106,14 +102,11 @@ public class CreateADBConnectionWizardPage extends WizardPage {
             @Override
             public void widgetSelected(SelectionEvent e) {
             	final String walletDirPath = handleBrowse(innerContainer.getShell(), walletDirText.getText());
-            	if(walletDirPath != null) {
-            	    IStatus status = validateWalletDirectory(walletDirPath);
-            	    updateStatus(status);
+            	if(walletDirPath != null)
             		walletDirText.setText(walletDirPath);
-            	}
             }
         });
-
+		
         Composite innerBottomContainer = new Composite(topLevelContainer, SWT.NONE);
         GridLayout innerBottomLayout = new GridLayout();
         innerBottomLayout.numColumns = 2;
@@ -135,13 +128,6 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 			aliasList.select(0);
 		}
 		
-		this.autoConnectCheckBox = new Button(innerBottomContainer, SWT.CHECK);
-		autoConnectCheckBox.setSelection(true); // auto-connect by default
-		GridData gdCheckBox = GridDataFactory.copyData(gd3);
-		gdCheckBox.horizontalSpan = 2;
-        this.autoConnectCheckBox.setLayoutData(gdCheckBox);
-		this.autoConnectCheckBox.setText("Automatically connect after profile is created");
-        
 		final String configFilePath = PreferencesWrapper.getConfigFileName();
         if(configFilePath != null) {
         	final String configFileDirPath = configFilePath.substring(0, configFilePath.lastIndexOf(File.separator));
@@ -161,12 +147,11 @@ public class CreateADBConnectionWizardPage extends WizardPage {
     	if(walletLocation == null || walletLocation.trim().equals(""))
     		return tnsEntries;
 		try {
-			File tnsnamesOraFile = getTnsOraFile(walletLocation);
-            
-			if (!tnsnamesOraFile.exists()) {
+			String tnsnamesOraFileLoc = walletLocation+File.separator+"tnsnames.ora";
+			if (!(new File(tnsnamesOraFileLoc).exists()))
 				return tnsEntries;
-			}
-			List<String> allLines = Files.readAllLines(tnsnamesOraFile.toPath());
+			
+			List<String> allLines = Files.readAllLines(Paths.get(tnsnamesOraFileLoc));
 			for (String line : allLines) {
 				if(line != null && line.trim().startsWith(dbName.toLowerCase()+"_")) {
 					int index = line.indexOf("=");
@@ -181,15 +166,6 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 		}
 		return tnsEntries;
     }
-
-    private File getTnsOraFile(String walletLocation) {
-        String tnsnamesOraFileLoc = getTnsOraFileLoc(walletLocation);
-        return new File(tnsnamesOraFileLoc);
-    }
-
-    private String getTnsOraFileLoc(String walletLocation) {
-        return walletLocation + File.separator + "tnsnames.ora";
-    }
 	
 	private String handleBrowse(Shell shell, String currentWalletDir) {
     	DirectoryDialog dialog = new DirectoryDialog(shell, SWT.OPEN);
@@ -199,34 +175,17 @@ public class CreateADBConnectionWizardPage extends WizardPage {
     }
 	
 	private void walletDirectoryChanged() {
-	    String walletDirectory = getWalletDirectory();
-        IStatus status = validateWalletDirectory(walletDirectory);
-        
-        if (status.isOK())
-        {
-            updateStatus((String)null);
-            aliasList.setEnabled(true);
-    		aliasList.clearSelection();
-    		aliasList.removeAll();
-    		Set<String> aliasSet = getTnsEntries(walletDirectory);
-    		if (aliasSet.size() > 0) {
-    			Iterator<String> it = aliasSet.iterator();
-    			while (it.hasNext()) {
-    				aliasList.add(it.next());
-    			}
-    			aliasList.select(0);
-    		}
-        }
-        else
-        {
-            updateStatus(status.getMessage());
-            aliasList.setEnabled(false);
-        }
+		aliasList.clearSelection();
+		aliasList.removeAll();
+		Set<String> aliasSet = getTnsEntries(getWalletDirectory());
+		if (aliasSet.size() > 0) {
+			Iterator<String> it = aliasSet.iterator();
+			while (it.hasNext()) {
+				aliasList.add(it.next());
+			}
+			aliasList.select(0);
+		}
 	}
-
-    private void updateStatus(IStatus status) {
-        updateStatus(status.getMessage());
-    }
 
 	private void updateStatus(String message) {
 		setErrorMessage(message);
@@ -248,27 +207,5 @@ public class CreateADBConnectionWizardPage extends WizardPage {
 	public String getWalletDirectory() {
 		return walletDirText.getText();
 	}
-	
-	public boolean isAutoConnectProfile() {
-	    return autoConnectCheckBox.getSelection();
-	}
 
-	private IStatus validateWalletDirectory(String walletDirStr)
-	{
-	    if (walletDirStr == null || walletDirStr.trim().isEmpty())
-	    {
-	        return new Status(IStatus.ERROR, getClass(), "Wallet Directory cannot be empty");
-	    }
-	    File walletDir = new File(walletDirStr);
-	    if (!walletDir.isDirectory())
-	    {
-	        return new Status(IStatus.ERROR, getClass(), String.format("%s must be an accessible directory", walletDirStr));
-	    }
-	    File tnsOraFile = getTnsOraFile(walletDirStr);
-	    if (!tnsOraFile.exists()) {
-	        return new Status(IStatus.ERROR, getClass(), 
-	                String.format("Can't find tnsnames.ora in wallet directory %s", walletDirStr));
-	    }
-	    return Status.OK_STATUS;
-	}
 }
