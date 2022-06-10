@@ -12,13 +12,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 public class ChangeWorkloadTypeWizardPage extends WizardPage {
-    private ISelection selection;
 
     public ChangeWorkloadTypeWizardPage(ISelection selection) {
         super("wizardPage");
         setTitle("Change Workload Type to Transaction Processing");
         setDescription("");
-        this.selection = selection;
     }
 
     @Override
@@ -37,11 +35,6 @@ public class ChangeWorkloadTypeWizardPage extends WizardPage {
         new Label(container, SWT.NULL);
         new Label(container, SWT.NULL);
         setControl(container);
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
 
 }

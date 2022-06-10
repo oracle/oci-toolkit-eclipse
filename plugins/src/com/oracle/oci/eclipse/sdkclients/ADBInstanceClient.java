@@ -6,6 +6,7 @@ package com.oracle.oci.eclipse.sdkclients;
 
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.ADMINPASSWORD;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CHANGE_WORKLOAD_TYPE;
+import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.COPY_ADMIN_PASSWORD;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CREATECLONE;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.CREATECONNECTION;
 import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.DOWNLOAD_CLIENT_CREDENTIALS;
@@ -41,19 +42,26 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 import com.oracle.bmc.database.DatabaseClient;
 import com.oracle.bmc.database.model.AutonomousContainerDatabaseSummary;
+import com.oracle.bmc.database.model.AutonomousDatabase;
 import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
+import com.oracle.bmc.database.model.AutonomousDatabaseConnectionStrings;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.DbWorkload;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.bmc.database.model.AutonomousDatabaseWallet;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
+import com.oracle.bmc.database.model.DatabaseConnectionStringProfile;
 import com.oracle.bmc.database.model.GenerateAutonomousDatabaseWalletDetails;
 import com.oracle.bmc.database.model.GenerateAutonomousDatabaseWalletDetails.GenerateType;
 import com.oracle.bmc.database.model.RestoreAutonomousDatabaseDetails;
@@ -63,6 +71,7 @@ import com.oracle.bmc.database.requests.CreateAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.DeleteAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.GenerateAutonomousDatabaseWalletRequest;
 import com.oracle.bmc.database.requests.GetAutonomousDatabaseRegionalWalletRequest;
+import com.oracle.bmc.database.requests.GetAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.GetAutonomousDatabaseWalletRequest;
 import com.oracle.bmc.database.requests.ListAutonomousContainerDatabasesRequest;
 import com.oracle.bmc.database.requests.ListAutonomousDatabaseBackupsRequest;
@@ -74,23 +83,26 @@ import com.oracle.bmc.database.requests.StopAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.UpdateAutonomousDatabaseRegionalWalletRequest;
 import com.oracle.bmc.database.requests.UpdateAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.UpdateAutonomousDatabaseWalletRequest;
-import com.oracle.bmc.database.responses.CreateAutonomousDatabaseResponse;
 import com.oracle.bmc.database.responses.GenerateAutonomousDatabaseWalletResponse;
 import com.oracle.bmc.database.responses.GetAutonomousDatabaseRegionalWalletResponse;
+import com.oracle.bmc.database.responses.GetAutonomousDatabaseResponse;
 import com.oracle.bmc.database.responses.GetAutonomousDatabaseWalletResponse;
 import com.oracle.bmc.database.responses.ListAutonomousContainerDatabasesResponse;
 import com.oracle.bmc.database.responses.ListAutonomousDatabaseBackupsResponse;
 import com.oracle.bmc.database.responses.ListAutonomousDatabasesResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.ui.explorer.common.CustomWizardDialog;
 import com.oracle.oci.eclipse.ui.explorer.database.ADBConstants;
 import com.oracle.oci.eclipse.ui.explorer.database.ChangeAdminPasswordADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.ChangeWorkloadTypeWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.CloneADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.CreateADBConnectionWizard;
+import com.oracle.oci.eclipse.ui.explorer.database.DBUtils;
 import com.oracle.oci.eclipse.ui.explorer.database.DownloadADBWalletWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.DownloadClientCredentialsWizard;
+import com.oracle.oci.eclipse.ui.explorer.database.ListConnectionProfilesDialog;
 import com.oracle.oci.eclipse.ui.explorer.database.RestartADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.RestoreADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.RotateWalletWizard;
@@ -98,6 +110,7 @@ import com.oracle.oci.eclipse.ui.explorer.database.ScaleUpDownADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.StartADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.StopADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.TerminateADBWizard;
+import com.oracle.oci.eclipse.ui.explorer.database.UpdateADBAccessControlWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.UpdateLicenseTypeADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.UpgradeADBInstanceToPaidWizard;
 
@@ -206,7 +219,15 @@ public class ADBInstanceClient extends BaseClient {
             case RESTART:
                 restartInstance(instance);
                 break;
-
+            case COPY_ADMIN_PASSWORD:
+                copyAdminPassword(instance);
+                break;
+            case ADBConstants.GET_CONNECTION_STRINGS:
+                showConnectionStrings(instance);
+                break;
+            case ADBConstants.UPDATE_ADB_ACCESS_CONTROL:
+                updateAccessControl(instance);
+                break;
             }
         }
 
@@ -320,6 +341,117 @@ public class ADBInstanceClient extends BaseClient {
                 .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instance.getId()).build());
     }
 
+    public static class DatabaseConnectionProfiles {
+        private List<DatabaseConnectionStringProfile> mTLSProfiles;
+        private List<DatabaseConnectionStringProfile> walletLessProfiles = Collections.emptyList();
+
+        public DatabaseConnectionProfiles(AutonomousDatabaseSummary instance) {
+            // should have mTLS profiles only; won't have walletLessProfiles
+            this.mTLSProfiles = new ArrayList<>(5);
+            // if the db instance is not so configured.
+            if (!instance.getIsMtlsConnectionRequired()) {
+                walletLessProfiles = new ArrayList<>(5);
+            }
+            AutonomousDatabaseConnectionStrings connectionStrings = instance.getConnectionStrings();
+            List<DatabaseConnectionStringProfile> profiles = connectionStrings.getProfiles();
+            for (DatabaseConnectionStringProfile profile : profiles) {
+                switch (profile.getTlsAuthentication()) {
+                case Mutual:
+                    this.mTLSProfiles.add(profile);
+                    break;
+                case Server:
+                    this.walletLessProfiles.add(profile);
+                    break;
+                default:
+                    ErrorHandler.logError("Unknown profile type");
+                }
+            }
+        }
+
+        public List<DatabaseConnectionStringProfile> getmTLSProfiles() {
+            return Collections.unmodifiableList(this.mTLSProfiles);
+        }
+
+        public List<DatabaseConnectionStringProfile> getWalletLessProfiles() {
+            return Collections.unmodifiableList(walletLessProfiles);
+        }
+        
+        
+    }
+    
+    public void showConnectionStrings(AutonomousDatabaseSummary instance) {
+        final DatabaseConnectionProfiles profiles = getConnectionProfiles(instance);
+        
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                new ListConnectionProfilesDialog(
+                    new Shell(Display.getDefault().getActiveShell(), SWT.SHELL_TRIM),
+                        profiles).open();
+            }
+            
+        });
+    }
+
+    private void updateAccessControl(AutonomousDatabaseSummary instance) {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                UpdateADBAccessControlWizard wizard = new UpdateADBAccessControlWizard(instance);
+                CustomWizardDialog dialog = 
+                    new CustomWizardDialog(Display.getDefault().getActiveShell(),wizard);
+                dialog.open();
+            }
+        });
+    }
+
+    public DatabaseConnectionProfiles getConnectionProfiles(AutonomousDatabaseSummary instance) {
+        if (databseClient == null) {
+            return null;
+        }
+        
+        return new DatabaseConnectionProfiles(instance);
+    }
+
+    private void copyAdminPassword(AutonomousDatabaseSummary instance) {
+        String key = PreferencesWrapper.createSecurePreferenceKey(instance);
+        final Display display = Display.getDefault();
+        if (display != null) {
+            display.syncExec(new Runnable() {
+
+                @Override
+                public void run() {
+                    String value = null;
+                    try {
+                        value = PreferencesWrapper.getSecurePreferences().get(key, null);
+                    } catch (StorageException e) {
+                        ErrorHandler.logErrorStack("Error loading secure storage", e);
+                    }
+                    boolean success = false;
+                    if (value != null) {
+                        DBUtils.copyPasswordToClipboard(display, value);
+                        success = true;
+                    }
+                    Shell activeShell = display.getActiveShell();
+                    if (success) {
+
+                        MessageDialog.openInformation(activeShell, "Success",
+                                "Password has been copied to the clipboard");
+                    } else {
+                        MessageDialog.openWarning(activeShell, "Couldn't find password",
+                                "Could not find password for specified ADB instance");
+                    }
+
+                }
+            });
+        }
+
+        else
+        {
+            ErrorHandler.logError("Copy Admin Password being called from non-SWT thread");
+        }
+    }
+
     private void changeAdminPassword(final AutonomousDatabaseSummary instance) {
 
         Display.getDefault().asyncExec(new Runnable() {
@@ -363,6 +495,32 @@ public class ADBInstanceClient extends BaseClient {
         databseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
                 .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instance.getId()).build());
     }
+    
+    public void updateAcl(final AutonomousDatabaseSummary instance,
+                            List<String> whitelistIps)
+    {
+        // Per UpdateAutonomousDatabaseDetails.whitelistedIps, if you want to clear all
+        // then set a single empty string.
+        if (whitelistIps.isEmpty())
+        {
+            whitelistIps = new ArrayList<>();
+            whitelistIps.add("");
+        }
+        UpdateAutonomousDatabaseDetails updateRequest = UpdateAutonomousDatabaseDetails.builder()
+            .whitelistedIps(whitelistIps).build();
+        databseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instance.getId()).build());
+    }
+
+    public void updateRequiresMTLS(final AutonomousDatabaseSummary instance,
+                                    boolean isRequired)
+    {
+        UpdateAutonomousDatabaseDetails updateRequest = 
+                UpdateAutonomousDatabaseDetails.builder().isMtlsConnectionRequired(Boolean.valueOf(isRequired))
+                    .build();
+        databseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instance.getId()).build());
+    }
 
     private void createClone(final AutonomousDatabaseSummary instance) {
         Display.getDefault().asyncExec(new Runnable() {
@@ -379,7 +537,7 @@ public class ADBInstanceClient extends BaseClient {
     }
 
     public void createClone(CreateAutonomousDatabaseCloneDetails cloneRequest) {
-        CreateAutonomousDatabaseResponse response =
+        //CreateAutonomousDatabaseResponse response =
                 databseClient.createAutonomousDatabase(
                         CreateAutonomousDatabaseRequest.builder()
                         .createAutonomousDatabaseDetails(cloneRequest)
@@ -388,7 +546,7 @@ public class ADBInstanceClient extends BaseClient {
     }
 
     public void createInstance(final CreateAutonomousDatabaseDetails request) {
-        CreateAutonomousDatabaseResponse response =
+        //CreateAutonomousDatabaseResponse response =
                 databseClient.createAutonomousDatabase(
                         CreateAutonomousDatabaseRequest.builder()
                         .createAutonomousDatabaseDetails(request)
@@ -702,4 +860,26 @@ public class ADBInstanceClient extends BaseClient {
 
     }
 
+    public AutonomousDatabase getAutonomousDatabase(final AutonomousDatabaseSummary instance) {
+
+        GetAutonomousDatabaseRequest request = GetAutonomousDatabaseRequest.builder()
+                .autonomousDatabaseId(instance.getId()).build();
+
+        if (databseClient == null) {
+            return null;
+        }
+
+        GetAutonomousDatabaseResponse response = null;
+        try {
+            response = databseClient.getAutonomousDatabase(request);
+        } catch (Throwable e) {
+            // To handle forbidden error
+            ErrorHandler.logError("Unable to get Autonomous Databases: " + e.getMessage());
+        }
+
+        if (response != null) {
+            return response.getAutonomousDatabase();
+        }
+        return null;
+    }
 }

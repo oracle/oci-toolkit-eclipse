@@ -12,13 +12,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 public class UpgradeADBInstanceToPaidWizardPage extends WizardPage {
-    private ISelection selection;
 
     public UpgradeADBInstanceToPaidWizardPage(ISelection selection) {
         super("wizardPage");
         setTitle("Confirm Upgrade");
         setDescription("");
-        this.selection = selection;
     }
 
     @Override
@@ -39,11 +37,6 @@ public class UpgradeADBInstanceToPaidWizardPage extends WizardPage {
         new Label(container, SWT.NULL);
         new Label(container, SWT.NULL);
         setControl(container);
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
 
 }

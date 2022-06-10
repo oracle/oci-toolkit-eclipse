@@ -26,6 +26,7 @@ public class ADBInstanceAction  extends BaseAction {
     private final String action;
 
 
+    @SuppressWarnings("unchecked")
     public ADBInstanceAction (ADBInstanceTable table, String action){
         this.table = table;
         this.instanceSelectionList = (List<AutonomousDatabaseSummary>)table.getSelectedObjects();

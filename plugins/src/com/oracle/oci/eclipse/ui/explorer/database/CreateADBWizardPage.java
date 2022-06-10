@@ -5,11 +5,20 @@
 package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
@@ -34,16 +43,19 @@ import org.eclipse.swt.widgets.Text;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.LicenseModel;
 import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.oci.eclipse.Activator;
+import com.oracle.oci.eclipse.Icons;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
 import com.oracle.oci.eclipse.sdkclients.IdentClient;
 import com.oracle.oci.eclipse.ui.account.CompartmentSelectWizard;
 import com.oracle.oci.eclipse.ui.explorer.common.CustomWizardDialog;
+import com.oracle.oci.eclipse.ui.explorer.database.validate.InputValidator;
+import com.oracle.oci.eclipse.ui.explorer.database.validate.PasswordInputValidator;
 
 public class CreateADBWizardPage extends WizardPage {
 
 	private Text displayNameText;
 	private Text databaseNameText;
-	private Label dbNameRule;
 	private Label dbNameRule1;
 	private Text compartmentText;
 
@@ -64,6 +76,7 @@ public class CreateADBWizardPage extends WizardPage {
 	private Text adminUserNameText;
 	private Text adminPasswordText;
 	private Text confirmAdminPasswordText;
+        private Button saveToSecureStoreBtn;
 
 	private Label licenseTypeLabel;
 	private Group licenseTypeGroup;
@@ -80,7 +93,7 @@ public class CreateADBWizardPage extends WizardPage {
 	private Compartment selectedContainerDBCompartment;
 	private Compartment defaultContainerDBCompartment;
 
-	private ISelection selection;
+	private boolean isInitialized; // = false
 
 	private Map<String, String> containertMap = new TreeMap<String, String>();
 	private DbWorkload workloadType;
@@ -92,25 +105,25 @@ public class CreateADBWizardPage extends WizardPage {
 		super("wizardPage");
 		setTitle("Create Autonomous Database");
 		setDescription("This wizard creates a new Autonomous Database. Please enter the required details.");
-		this.selection = selection;
 		this.workloadType = workloadType;
 		Compartment rootCompartment = IdentClient.getInstance().getRootCompartment();
 		this.selectedADBCompartment = rootCompartment;
 		this.defaultContainerDBCompartment = rootCompartment;
+		setPageComplete(false); // password starts out blank and must be entered to complete
 	}
 
-	@Override
-	public void createControl(Composite parent) {
-		
-		Composite container = new Composite(parent, SWT.NULL);
-		GridLayout layout = new GridLayout();
-		container.setLayout(layout);
-		layout.numColumns = 2;
-		layout.verticalSpacing = 9;
-		
-		Label compartmentLabel = new Label(container, SWT.NULL);
-		compartmentLabel.setText("&Choose a compartment:");
-		Composite innerTopContainer = new Composite(container, SWT.NONE);
+    @Override
+    public void createControl(Composite parent) {
+
+        Composite container = new Composite(parent, SWT.NULL);
+        GridLayout layout = new GridLayout();
+        container.setLayout(layout);
+        layout.numColumns = 2;
+        layout.verticalSpacing = 9;
+
+        Label compartmentLabel = new Label(container, SWT.NULL);
+        compartmentLabel.setText("&Choose a compartment:");
+        Composite innerTopContainer = new Composite(container, SWT.NONE);
         GridLayout innerTopLayout = new GridLayout();
         innerTopLayout.numColumns = 2;
         innerTopContainer.setLayout(innerTopLayout);
@@ -147,7 +160,7 @@ public class CreateADBWizardPage extends WizardPage {
 		databaseNameText.setLayoutData(gd1);
 		databaseNameText.setText("DB" + defaultDBName);
 
-		dbNameRule = new Label(container, SWT.NULL);
+		new Label(container, SWT.NULL);
 		dbNameRule1 = new Label(container, SWT.NULL);
 		dbNameRule1.setText(
 				"The name must contain only letters and numbers, starting with a letter. Maximum of 14 characters.");
@@ -182,17 +195,66 @@ public class CreateADBWizardPage extends WizardPage {
 
 		Label adminPasswordLabel = new Label(container, SWT.NULL);
 		adminPasswordLabel.setText("&Password:");
-		adminPasswordText = new Text(container, SWT.BORDER | SWT.PASSWORD);
-		GridData gd7 = new GridData(GridData.FILL_HORIZONTAL);
+		Composite compPasswordPanel = new Composite(container, SWT.NULL);
+		GridLayout passwordLayout = new GridLayout(3, false);
+		passwordLayout.marginWidth = 0;
+		passwordLayout.marginHeight = 0;
+		compPasswordPanel.setLayout(passwordLayout);
+		GridDataFactory.defaultsFor(compPasswordPanel).span(1,1).grab(true, true).indent(0, 0)
+			.align(SWT.FILL, SWT.CENTER).applyTo(compPasswordPanel);
+		adminPasswordText = new Text(compPasswordPanel, SWT.BORDER | SWT.PASSWORD);
+		GridData gd7 = new GridData(GridData.FILL_HORIZONTAL | GridData.GRAB_HORIZONTAL);
 		adminPasswordText.setLayoutData(gd7);
+		ModifyListener passwordListener = new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				updateStatus(validate());
+			}
+		};
+		adminPasswordText.addModifyListener(passwordListener);
+		Button generateBtn = new Button(compPasswordPanel, SWT.PUSH);
+		generateBtn.setImage(Activator.getImage(Icons.GENERATE_RANDOM_PASSWORD.getPath()));
+		generateBtn.setToolTipText("Generate Random Password");
+
+		Button copyToClipboard = new Button(compPasswordPanel, SWT.PUSH);
+		copyToClipboard.setImage(Activator.getImage(Icons.COPY_TO_CLIPBOARD_CUSTOM.getPath()));
+		copyToClipboard.setToolTipText("Copy Password to Clipboard");
+		copyToClipboard.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                DBUtils.copyPasswordToClipboard(e.display, adminPasswordText.getText());
+            }
+        });
+
+	    new Label(container, SWT.NULL);
+        Label passwordGeneratorInfo = new Label(container, SWT.NULL);
+        passwordGeneratorInfo.setText("You can use the 'Generate Random Password' button (with the dice icon)\n"
+                + " to generate a password that fits the minimum requirements for the ADMIN password.");
+        GridData gData = GridDataFactory.swtDefaults().align(SWT.BEGINNING, SWT.BEGINNING).create();
+        passwordGeneratorInfo.setLayoutData(gData);
 
 		Label confirmAdminPasswordLabel = new Label(container, SWT.NULL);
 		confirmAdminPasswordLabel.setText("&Confirm password:");
 		confirmAdminPasswordText = new Text(container, SWT.BORDER | SWT.PASSWORD);
 		GridData gd8 = new GridData(GridData.FILL_HORIZONTAL);
 		confirmAdminPasswordText.setLayoutData(gd8);
+		confirmAdminPasswordText.addModifyListener(passwordListener);
+		generateBtn.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                final String newPass = generateAdminPassword();
+                adminPasswordText.setText(newPass);
+                confirmAdminPasswordText.setText(newPass);
+            }
+        });
 
-		Label passwordRule = new Label(container, SWT.NULL);
+		new Label(container, SWT.NONE);
+		this.saveToSecureStoreBtn = new Button(container, SWT.CHECK);
+		saveToSecureStoreBtn.setText("Save password to Eclipse Secure Store");
+		saveToSecureStoreBtn.setSelection(true);
+		GridDataFactory.defaultsFor(saveToSecureStoreBtn).applyTo(saveToSecureStoreBtn);
+		
+		new Label(container, SWT.NULL);
 		Label passwordRule1 = new Label(container, SWT.NULL);
 		passwordRule1.setText("Password must be 12 to 30 characters and contain at least one uppercase letter,\n"
 				+ " one lowercase letter, and one number. The password cannot contain the double \n"
@@ -242,6 +304,7 @@ public class CreateADBWizardPage extends WizardPage {
 		}
 
 		setControl(container);
+		isInitialized = true;
 	}
 	
 	private void serverlessButtonSelection(Composite container) {
@@ -360,8 +423,6 @@ public class CreateADBWizardPage extends WizardPage {
 
 		containerDBCompartmentText.addModifyListener(new ModifyListener(){
 		      public void modifyText(ModifyEvent event) {
-		        // Get the widget whose text was modified
-		        Text text = (Text) event.widget;
 				if (isDedicatedInfra()) {
 					containerDBList.clearSelection();
 					containerDBList.removeAll();
@@ -492,101 +553,270 @@ public class CreateADBWizardPage extends WizardPage {
 		}
     }
 	
-	private void handleSelectContainerDBCompartmentEvent() {
-    	Consumer<Compartment> consumer=new Consumer<Compartment>() {
 
-			@Override
-			public void accept(Compartment compartment) {
-				selectedContainerDBCompartment = compartment;
-			}
-		};
-    	CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
-				new CompartmentSelectWizard(consumer, false));
-		dialog.setFinishButtonText("Select");
-		if (Window.OK == dialog.open()) {
-		}
+    private void handleSelectContainerDBCompartmentEvent() {
+        Consumer<Compartment> consumer = new Consumer<Compartment>() {
+
+            @Override
+            public void accept(Compartment compartment) {
+                selectedContainerDBCompartment = compartment;
+            }
+        };
+        CustomWizardDialog dialog = new CustomWizardDialog(Display.getDefault().getActiveShell(),
+                new CompartmentSelectWizard(consumer, false));
+        dialog.setFinishButtonText("Select");
+        if (Window.OK == dialog.open()) {
+        }
     }
 
-	private void updateStatus(String message) {
-		setErrorMessage(message);
-		setPageComplete(message == null);
-	}
+    public String getDisplayName() {
+        return displayNameText.getText();
+    }
 
-	public String getDisplayName() {
-		return displayNameText.getText();
-	}
+    public String getDatabaseName() {
+        return databaseNameText.getText();
+    }
 
-	public String getDatabaseName() {
-		return databaseNameText.getText();
-	}
+    public String getAdminPassword() {
+        return adminPasswordText.getText();
+    }
 
-	public String getAdminPassword() {
-		return adminPasswordText.getText();
-	}
+    public String getConfirmAdminPassword() {
+        return confirmAdminPasswordText.getText();
+    }
 
-	public String getConfirmAdminPassword() {
-		return confirmAdminPasswordText.getText();
-	}
+    public boolean isStoreAdminPassword() {
+        return this.saveToSecureStoreBtn.getSelection();
+    }
 
-	public Boolean isAutoScalingEnabled() {
-		if(isDedicatedInfra())
-			return null;
-		
-		return autoScalingEnabledCheckBox.getSelection();
-	}
+    public Boolean isAutoScalingEnabled() {
+        if (isDedicatedInfra())
+            return null;
 
-	public LicenseModel getLicenseModel() {
-		if(isDedicatedInfra())
-			return null;
-		
-		if (licenseTypeIncludedRadioButton.getSelection()) {
-			return LicenseModel.LicenseIncluded;
-		} else {
-			return LicenseModel.BringYourOwnLicense;
-		}
-	}
+        return autoScalingEnabledCheckBox.getSelection();
+    }
 
-	public String getCPUCoreCount() {
-		return cpuCoreCountSpinner.getText();
-	}
+    public LicenseModel getLicenseModel() {
+        if (isDedicatedInfra())
+            return null;
 
-	public String getStorageInTB() {
-		if(isAlwaysFreeInstance())
-			return ADBConstants.ALWAYS_FREE_STORAGE_TB_DUMMY;
-		return storageInTBSpinner.getText();
-	}
+        if (licenseTypeIncludedRadioButton.getSelection()) {
+            return LicenseModel.LicenseIncluded;
+        } else {
+            return LicenseModel.BringYourOwnLicense;
+        }
+    }
 
-	public String getADBCompartmentId() {
-		return selectedADBCompartment.getId();
-	}
+    public String getCPUCoreCount() {
+        return cpuCoreCountSpinner.getText();
+    }
 
-	public boolean isDedicatedInfra() {
-		if (workloadType == DbWorkload.Oltp) {
-			return dedicatedDeploymentRadioButton.getSelection();
-		}
-		return false;
-	}
-	
-	public String getContainerDBCompartmentId() {
-		if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
-			return selectedContainerDBCompartment.getId();
-		}
-		return null;
-	}
+    public String getStorageInTB() {
+        if (isAlwaysFreeInstance())
+            return ADBConstants.ALWAYS_FREE_STORAGE_TB_DUMMY;
+        return storageInTBSpinner.getText();
+    }
 
-	public String getSelectedContainerDbId() {
-		if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
-			return containertMap.get(containerDBList.getText());
-		}
-		return null;
-	}
-	
-	public boolean isAlwaysFreeInstance() {
-		if ((workloadType == DbWorkload.Ajd) || 
-		  (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection())) {
-			return false;
-		}
-		return alwaysFreeCheckButton.getSelection();
-	}
+    public String getADBCompartmentId() {
+        return selectedADBCompartment.getId();
+    }
 
+    public boolean isDedicatedInfra() {
+        if (workloadType == DbWorkload.Oltp) {
+            return dedicatedDeploymentRadioButton.getSelection();
+        }
+        return false;
+    }
+
+    public String getContainerDBCompartmentId() {
+        if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
+            return selectedContainerDBCompartment.getId();
+        }
+        return null;
+    }
+
+    public String getSelectedContainerDbId() {
+        if (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection()) {
+            return containertMap.get(containerDBList.getText());
+        }
+        return null;
+    }
+
+    public boolean isAlwaysFreeInstance() {
+        if ((workloadType == DbWorkload.Ajd)
+                || (workloadType == DbWorkload.Oltp && dedicatedDeploymentRadioButton.getSelection())) {
+            return false;
+        }
+        return alwaysFreeCheckButton.getSelection();
+    }
+
+    private void updateStatus(IStatus status) {
+        IStatus fullStatus = status;
+        if (status.isMultiStatus()) {
+            if (!status.isOK()) {
+                MultiStatus multiStatus = (MultiStatus) status;
+                for (IStatus child : multiStatus.getChildren()) {
+                    if (!child.isOK()) {
+                        fullStatus = new Status(child.getSeverity(), Activator.PLUGIN_ID, child.getMessage());
+                    }
+                }
+            }
+        }
+        if (isInitialized) {
+            if (!fullStatus.isOK()) {
+                // don't update status if we're not initialized yet
+                setErrorMessage(fullStatus.getMessage());
+                setPageComplete(false);
+            } else {
+                setErrorMessage(null);
+                setPageComplete(true);
+            }
+        } else {
+            setMessage("You must enter an admin password");
+        }
+    }
+
+    public MultiStatus validate() {
+        MultiStatus multiStatus = new MultiStatus(Activator.PLUGIN_ID, 0, "", null);
+        IStatus status = validatePasswords();
+        if (!status.isOK()) {
+            multiStatus.add(status);
+        }
+        return multiStatus;
+    }
+
+    private static final InputValidator<String> passwordInputValidator = new InputValidator<String>() {
+        @Override
+        public IStatus validate(String inputValue) {
+            if (inputValue == null || inputValue.trim().isEmpty()) {
+                return error("Passwords can't be empty");
+            }
+            if (inputValue.length() < 12 || inputValue.length() > 30) {
+                return error("Passwords must be between 12 and 30 characters long");
+            }
+            boolean containsAtLeastOneUpper = false;
+            boolean containsAtLeastOneLower = false;
+            boolean containsAtLeastOneNumber = false;
+            for (char character : inputValue.toCharArray()) {
+                if (Character.isUpperCase(character)) {
+                    containsAtLeastOneUpper = true;
+                } else if (Character.isLowerCase(character)) {
+                    containsAtLeastOneLower = true;
+                } else if (Character.isDigit(character)) {
+                    containsAtLeastOneNumber = true;
+                } else {
+                    if (character == '"') {
+                        return error("Passwords must be between 12 and 30 characters long");
+                    }
+                }
+            }
+            if (!containsAtLeastOneLower) {
+                return error("Password must contain at least one lower case character");
+            }
+            if (!containsAtLeastOneUpper) {
+                return error("Password must contain at least one upper case character");
+            }
+            if (!containsAtLeastOneNumber) {
+                return error("Password must contain at least one number");
+            }
+            if (inputValue.toLowerCase().contains("admin")) {
+                return error("Passwords cannot contain the word 'admin' in any case");
+            }
+            return Status.OK_STATUS;
+        }
+
+    };
+
+    private final PasswordInputValidator passwordValidator = new PasswordInputValidator(passwordInputValidator);
+
+    private IStatus validatePasswords() {
+        IStatus status = validatePassword(this.adminPasswordText);
+        if (!status.isOK()) {
+            return status;
+        }
+        String password = this.adminPasswordText.getText();
+        String confirmPassword = this.confirmAdminPasswordText.getText();
+        if (!password.equals(confirmPassword)) {
+            return error("Confirmed password must match password");
+        }
+        return Status.OK_STATUS;
+    }
+
+    private IStatus validatePassword(Text source) {
+        return passwordValidator.validate(source);
+    }
+
+    private final static List<Character> PASSWORD_CHARS;
+    private final static List<Character> LOWER_CASE = new ArrayList<>(26);
+    private final static List<Character> UPPER_CASE = new ArrayList<>(26);
+    private final static List<Character> DIGITS = new ArrayList<>(10);
+    private final static List<?> AT_LEAST_ONE[] = {LOWER_CASE, UPPER_CASE, DIGITS};
+
+    static {
+        List<Character> characters = new ArrayList<>();
+        for (int i = (int) 'a'; i <= (int) 'z'; i++) {
+            LOWER_CASE.add((char) i);
+        }
+
+        for (int i = (int) 'A'; i <= (int) 'Z'; i++) {
+            UPPER_CASE.add((char) i);
+        }
+
+        for (int i = (int) '0'; i <= (int) '9'; i++) {
+            DIGITS.add((char) i);
+        }
+
+        characters.addAll(LOWER_CASE);
+        characters.addAll(UPPER_CASE);
+        characters.addAll(DIGITS);
+        characters.addAll(Arrays.asList('!', '@', '#','$', '%', '^', '&', '*', '(', ')', '+', '=', '-', '?'));
+
+        PASSWORD_CHARS = Collections.unmodifiableList(characters);
+    }
+
+    private String generateAdminPassword() {
+        final int minSize = 12;
+        final int maxSize = 30;
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        int length = random.nextInt(minSize, maxSize + 1);
+        StringBuilder password = new StringBuilder();
+        
+        for (int i = 0; i < length; i++)
+        {
+            int nextInt = random.nextInt(0, PASSWORD_CHARS.size());
+            password.append(PASSWORD_CHARS.get(nextInt));
+        }
+        
+        // get a list of three unique random indices that are within the
+        // password length
+        List<Integer>  checkOffsets = new ArrayList<>();
+        while(checkOffsets.size() < 3)
+        {
+            int nextInt = random.nextInt(0, length);
+            if (!checkOffsets.contains(nextInt)) {
+                checkOffsets.add(nextInt);
+            }
+        }
+        
+        // for each offset, check the character at that offset.  If it's
+        // not one of the mandatory ones, replace it.
+        for (int i = 0; i < 3; i++)
+        {
+            Integer index = checkOffsets.get(i);
+            char charAt = password.charAt(index);
+            List<?> allowed = AT_LEAST_ONE[i];
+            if (!allowed.contains(charAt))
+            {
+                int nextInt = random.nextInt(0, allowed.size());
+                @SuppressWarnings("unchecked")
+                Character allowedChar = ((List<Character>)allowed).get(nextInt);
+                password.setCharAt(index, allowedChar);
+            }
+        }
+        return password.toString();
+    }
+
+    private static IStatus error(String message) {
+        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
+    }
 }

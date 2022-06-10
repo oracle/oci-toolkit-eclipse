@@ -17,8 +17,6 @@ import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 
 public class TerminateADBWizardPage  extends WizardPage {
 
-    
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
     private Text databaseNameText;
 
@@ -26,7 +24,6 @@ public class TerminateADBWizardPage  extends WizardPage {
         super("wizardPage");
         setTitle("Terminate Autonomous Database");
         setDescription("");
-        this.selection = selection;
         this.instance = instance;
     }
 
@@ -55,12 +52,7 @@ public class TerminateADBWizardPage  extends WizardPage {
         setControl(container);
     }
 
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
-    
-	public String getDbName() {
+    public String getDbName() {
 		return databaseNameText.getText();
 	}
 

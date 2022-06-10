@@ -7,6 +7,7 @@ package com.oracle.oci.eclipse.ui.explorer.database;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
@@ -19,6 +20,8 @@ import org.eclipse.ui.IWorkbenchWizard;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails.Builder;
+import com.oracle.oci.eclipse.ErrorHandler;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
 
 public class CreateADBWizard  extends Wizard implements INewWizard {
@@ -26,6 +29,7 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
     private CreateADBWizardPage page;
     private ISelection selection;
     DbWorkload workloadType;
+//    private CreateADBAdvancedWizardPage advancedPage;
 
 	public CreateADBWizard(DbWorkload workloadType) {
 		super();
@@ -37,6 +41,8 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
     public void addPages() {
         page = new CreateADBWizardPage(selection, workloadType);
         addPage(page);
+//        advancedPage = new CreateADBAdvancedWizardPage(selection, workloadType);
+//        addPage(advancedPage);
     }
 
     /**
@@ -85,7 +91,7 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
             }
         };
         try {
-            getContainer().run(true, false, op);
+            getContainer().run(true, true, op);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
@@ -94,6 +100,17 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
             return false;
         }
 
+        // if that worked, store the admin password if checked
+        if (page.isStoreAdminPassword())
+        {
+            String key = PreferencesWrapper.createSecurePreferenceKey(page.getADBCompartmentId(), page.getDatabaseName());
+            try {
+                PreferencesWrapper.getSecurePreferences().put(key, page.getAdminPassword(), true);
+            } catch (StorageException e) {
+               ErrorHandler.logErrorStack("Error storing admin password", e);
+            }
+        }
+        
         return true;
     }
 

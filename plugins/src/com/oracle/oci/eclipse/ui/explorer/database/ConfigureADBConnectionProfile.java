@@ -10,7 +10,6 @@ import java.util.Properties;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.datatools.connectivity.ConnectionProfileException;
 import org.eclipse.datatools.connectivity.IConnectionProfile;
 import org.eclipse.datatools.connectivity.ProfileManager;
@@ -95,7 +94,7 @@ public class ConfigureADBConnectionProfile {
 
 	public static void createConnectionProfile(
 			IProgressMonitor monitor, AutonomousDatabaseSummary adbInstance, String user,
-			String password, String walletLocation, String aliasName) throws ConnectionProfileException {
+			String password, String walletLocation, String aliasName, boolean autoConnect) throws ConnectionProfileException {
 		
 		final String regionName = AuthProvider.getInstance().getRegion().toString();
 		final String profileName = user.toUpperCase()+"."+aliasName+"."+regionName;
@@ -103,15 +102,34 @@ public class ConfigureADBConnectionProfile {
 		final String url = "jdbc:oracle:thin:@"+aliasName+"?TNS_ADMIN="+walletLocation;
 		
 		monitor.beginTask("Configuring database connection", 5);
-    	IProgressMonitor subMonitor = new SubProgressMonitor(monitor, 4);
-    	subMonitor.beginTask("Creating connection profile", 1);
+		monitor.subTask("Creating connection profile");
 		
 		DriverInstance driverInstance = getDriverInstance();
 		IConnectionProfile profile = getConnectionProfile(driverInstance, profileName, user, password, url);
 		ErrorHandler.logInfo("Connection profile created successfully for database : " + adbInstance.getDbName());
-		subMonitor.worked(1);
+		monitor.worked(1);
 		monitor.subTask("Connecting...");
-		ConfigureADBConnectionProfile.connectAndRevealConnectionProfile(profile);
+        if (monitor.isCanceled()) {
+            return;
+        }
+		
+		if (autoConnect) {
+	        org.eclipse.core.runtime.jobs.Job job = new org.eclipse.core.runtime.jobs.Job("Make remote JDBC connection") {
+	            @Override
+	            protected IStatus run(IProgressMonitor monitor) {
+	                return connectAndRevealConnectionProfile(profile);
+	            }
+
+                @Override
+                protected void canceling() {
+                    
+                    getThread().interrupt();
+                }
+	            
+	            
+	        };
+	        job.schedule();
+		}
 		monitor.worked(1);
 	}
 	
@@ -176,21 +194,8 @@ public class ConfigureADBConnectionProfile {
      * @param connectionProfile
      *            The connection profile to connect and reveal
      */
-    public static void connectAndRevealConnectionProfile(final IConnectionProfile connectionProfile) {
-        IStatus connectStatus = connectionProfile.connect();
-        if (connectStatus.isOK() == false) {
-        	try {
-				ProfileManager.getInstance().deleteProfile(connectionProfile);
-			} catch (Exception e) {
-				ErrorHandler.logInfo("Could not delete connection profile: " + e.getMessage());
-			}
-			Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-					"Unable to connect to the Autonomous database.  Make sure your password is correct"
-					+ "\n and you can access your database through your network and any firewalls you may be connecting through.");
-            StatusManager.getManager().handle(status, StatusManager.BLOCK | StatusManager.LOG);
-            return;
-        }
-
+    public static IStatus connectAndRevealConnectionProfile(final IConnectionProfile connectionProfile) {
+        // TODO: does it really make sense to delete the profile if there's an error?
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
@@ -212,6 +217,20 @@ public class ConfigureADBConnectionProfile {
                 }
             }
         });
+        IStatus connectStatus = connectionProfile.connect();
+        if (connectStatus != null && !connectStatus.isOK()) {
+            try {
+                ProfileManager.getInstance().deleteProfile(connectionProfile);
+            } catch (Exception e) {
+                ErrorHandler.logInfo("Could not delete connection profile: " + e.getMessage());
+            }
+            Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                    "Unable to connect to the Autonomous database.  Make sure your password is correct"
+                    + "\n and you can access your database through your network and any firewalls you may be connecting through.");
+            StatusManager.getManager().handle(status, StatusManager.BLOCK | StatusManager.LOG);
+            return connectStatus;
+        }
+        return connectStatus == null ? new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error connecting the profile") : connectStatus;
     }
     
 }

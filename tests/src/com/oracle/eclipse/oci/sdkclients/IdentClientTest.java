@@ -17,6 +17,7 @@ public class IdentClientTest {
         SetupConfig.init();
     }
 
+    @SuppressWarnings("unused")
     private IdentClient createTestSubject() {
         return IdentClient.getInstance();
     }

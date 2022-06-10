@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 
+import com.oracle.bmc.objectstorage.model.ArchivalState;
 import com.oracle.bmc.objectstorage.model.ObjectSummary;
 import com.oracle.bmc.objectstorage.responses.HeadObjectResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
@@ -86,10 +87,10 @@ public class DetailsObjectAction extends BaseAction {
         data.add(new TablePair("Last Modified", objDetails.getLastModified().toLocaleString()));
         return data;
     }
-    private String getArchivalState(String state) {
+    private String getArchivalState(ArchivalState state) {
         if (state == null)
             return "Standard";
-        return state;
+        return state.getValue();
     }
 
 }

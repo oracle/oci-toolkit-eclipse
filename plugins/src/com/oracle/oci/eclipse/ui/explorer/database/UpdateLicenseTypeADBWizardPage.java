@@ -24,15 +24,12 @@ public class UpdateLicenseTypeADBWizardPage extends WizardPage {
 	private Group licenseTypeGroup;
 	private Button bringYourOwnLicenseRadioButton;
     private Button licenseIncludedRadioButton;
-    
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
 
     public UpdateLicenseTypeADBWizardPage(ISelection selection, AutonomousDatabaseSummary instance) {
         super("wizardPage");
         setTitle("ADB Update License Type Wizard");
         setDescription("This wizard updates license model for ADB instance");
-        this.selection = selection;
         this.instance = instance;
     }
 
@@ -68,12 +65,7 @@ public class UpdateLicenseTypeADBWizardPage extends WizardPage {
         setControl(container);
     }
 
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
-    
-	public UpdateAutonomousDatabaseDetails.LicenseModel getLicenseType() {
+    public UpdateAutonomousDatabaseDetails.LicenseModel getLicenseType() {
 		final UpdateAutonomousDatabaseDetails.LicenseModel licenseModel;
 		if (true == bringYourOwnLicenseRadioButton.getSelection()) {
 			licenseModel = UpdateAutonomousDatabaseDetails.LicenseModel.BringYourOwnLicense;

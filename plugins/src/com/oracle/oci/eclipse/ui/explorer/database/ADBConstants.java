@@ -47,6 +47,9 @@ public class ADBConstants {
 	public static final String SERVICE_CONSOLE = "Service Console";
 	public static final String CHANGE_WORKLOAD_TYPE = "Change Workload Type";
 	public static final String RESTART = "Restart";
+	public static final String COPY_ADMIN_PASSWORD = "Copy Admin Password";
+	public static final String GET_CONNECTION_STRINGS = "Get TNS Connection Strings";
+	public static final String UPDATE_ADB_ACCESS_CONTROL = "Update Access Control";
 	
 	private static final Set<String> ACTION_SET = new TreeSet<String>();
 	static {
@@ -56,6 +59,9 @@ public class ADBConstants {
 		ACTION_SET.add(SCALEUPDOWN);
 		ACTION_SET.add(UPDATELICENCETYPE);
 		ACTION_SET.add(ADMINPASSWORD);
+		ACTION_SET.add(COPY_ADMIN_PASSWORD);
+		ACTION_SET.add(GET_CONNECTION_STRINGS);
+		ACTION_SET.add(UPDATE_ADB_ACCESS_CONTROL);
 		ACTION_SET.add(TERMINATE);
 		ACTION_SET.add(DOWNLOAD_CLIENT_CREDENTIALS);
 		ACTION_SET.add(CREATECONNECTION);

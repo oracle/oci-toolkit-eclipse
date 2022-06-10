@@ -4,8 +4,11 @@
  */
 package com.oracle.oci.eclipse.sdkclients;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import com.oracle.bmc.database.model.AutonomousDatabaseConnectionStrings;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 
 public class ADBInstanceWrapper {
@@ -66,7 +69,9 @@ public class ADBInstanceWrapper {
 	public String getAutoScaling() {
 		return instance.getIsAutoScalingEnabled() ? "Enabled" : "Disabled";
 	}
-
+	public com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState getLifecycleStateEnum() {
+	    return instance.getLifecycleState();
+	}
 	public String getLifeCycleState() {
 		return instance.getLifecycleState().getValue();
 	}
@@ -90,4 +95,53 @@ public class ADBInstanceWrapper {
 	public String getInstanceType() {
 		return isFreeTierInstance() ? "Free" : "Paid";
 	}
+	
+	public String getDatabaseConnectionStrings()
+	{
+		AutonomousDatabaseConnectionStrings connectionStrings = instance.getConnectionStrings();
+		return connectionStrings.getAllConnectionStrings().toString();
+	}
+
+	public boolean isMTLSRequired()
+	{
+		 Boolean isMtlsConnectionRequired = instance.getIsMtlsConnectionRequired();
+		 return isMtlsConnectionRequired == null ? false : isMtlsConnectionRequired.booleanValue();
+	}
+	
+	public String isMTLSRequiredAsYesNo()
+	{
+		return isMTLSRequired() ? "Yes" : "No";
+	}
+	
+	public boolean isAclEnabled()
+	{
+	    Boolean isAccessControlEnabled = instance.getIsAccessControlEnabled();
+	    return isAccessControlEnabled != null && isAccessControlEnabled.booleanValue();
+	}
+	
+	public String isAclEnabledYesNo()
+	{
+	    return isAclEnabled() ? "Yes" : "No";
+	}
+
+	public boolean isWhiteListedIps()
+	{
+	    return instance.getArePrimaryWhitelistedIpsUsed() != null 
+	            && instance.getArePrimaryWhitelistedIpsUsed().booleanValue();
+	}
+
+	public String isWhiteListedIpsYesNo() {
+        return isWhiteListedIps() ? "Yes" : "No";
+    }
+
+	public List<String> getWhiteListedIps()
+	{
+	    List<String> whitelistedIps = instance.getWhitelistedIps();
+	    if (whitelistedIps != null)
+	    {
+	        return whitelistedIps;
+	    }
+	    return Collections.emptyList();
+	}
+
 }

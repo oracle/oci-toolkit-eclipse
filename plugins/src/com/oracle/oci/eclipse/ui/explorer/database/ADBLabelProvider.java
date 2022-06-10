@@ -24,7 +24,7 @@ public class ADBLabelProvider extends LabelProvider implements ILabelProvider, I
 
 	@Override
 	public String getDescription(Object element) {
-		String text = getText(element);
+		//String text = getText(element);
 		if (element instanceof ADBRootElement) {
 			return "Double click to see ADB Instances or Right click to create an ADB instance";
 		}
