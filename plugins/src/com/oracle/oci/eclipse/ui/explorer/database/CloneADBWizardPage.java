@@ -26,7 +26,6 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
-import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.LicenseModel;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails.CloneType;
 import com.oracle.bmc.identity.model.Compartment;
@@ -55,7 +54,6 @@ public class CloneADBWizardPage  extends WizardPage {
     private Group licenseTypeGroup;
     private Button licenseTypeOwnRadioButton;
     private Button licenseTypeIncludedRadioButton;
-    private ISelection selection;
     AutonomousDatabaseSummary sourceInstance;
     private Compartment selectedCompartment;
 
@@ -63,7 +61,6 @@ public class CloneADBWizardPage  extends WizardPage {
         super("wizardPage");
         setTitle("Create Autonomous Database Clone");
         setDescription("This wizard clones an ADB instance. Please enter the required details.");
-        this.selection = selection;
         this.sourceInstance = sourceInstance;
         this.selectedCompartment = IdentClient.getInstance().getRootCompartment();
     }
@@ -134,6 +131,7 @@ public class CloneADBWizardPage  extends WizardPage {
         GridData gd1 = new GridData(GridData.FILL_HORIZONTAL);
         databaseNameText.setLayoutData(gd1);
         databaseNameText.setText("DB"+defaultDBName);
+        @SuppressWarnings("unused")
         Label dbNameRule = new Label(container, SWT.NULL);
         Label dbNameRule1 = new Label(container, SWT.NULL);
         dbNameRule1.setText(
@@ -195,6 +193,7 @@ public class CloneADBWizardPage  extends WizardPage {
         confirmAdminPasswordText = new Text(container, SWT.BORDER | SWT.PASSWORD);
         GridData gd8 = new GridData(GridData.FILL_HORIZONTAL);
         confirmAdminPasswordText.setLayoutData(gd8);
+        @SuppressWarnings("unused")
         Label passwordRule = new Label(container, SWT.NULL);
         Label passwordRule1 = new Label(container, SWT.NULL);
         passwordRule1.setText(
@@ -299,11 +298,6 @@ public class CloneADBWizardPage  extends WizardPage {
 		dialog.setFinishButtonText("Select");
 		if (Window.OK == dialog.open()) {
 		}
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
 
     public String getDisplayName() {

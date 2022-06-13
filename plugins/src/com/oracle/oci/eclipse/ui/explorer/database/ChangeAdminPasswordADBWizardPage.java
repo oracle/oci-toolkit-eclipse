@@ -21,14 +21,12 @@ public class ChangeAdminPasswordADBWizardPage extends WizardPage {
 	private Text adminUserName;
     private Text adminPasswordText;
     private Text confirmAdminPasswordText;
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
 
     public ChangeAdminPasswordADBWizardPage(ISelection selection, AutonomousDatabaseSummary instance) {
         super("wizardPage");
         setTitle("ADB Admin Password Change");
         setDescription("Change the password for your Autonomous Database ADMIN user.");
-        this.selection = selection;
         this.instance = instance;
     }
 
@@ -61,6 +59,7 @@ public class ChangeAdminPasswordADBWizardPage extends WizardPage {
         GridData gd2 = new GridData(GridData.FILL_HORIZONTAL);
         confirmAdminPasswordText.setLayoutData(gd2);
         
+        @SuppressWarnings("unused")
         Label passwordRule = new Label(container, SWT.NULL);
         Label passwordRule1 = new Label(container, SWT.NULL);
         passwordRule1.setText(
@@ -73,10 +72,10 @@ public class ChangeAdminPasswordADBWizardPage extends WizardPage {
         setControl(container);
     }
 
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
+//    private void updateStatus(String message) {
+//        setErrorMessage(message);
+//        setPageComplete(message == null);
+//    }
 
     public String getAdminPassword() {
         return adminPasswordText.getText();

@@ -23,8 +23,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 public class RegisterDriverWizardPage extends WizardPage {
-    
-    private ISelection selection;
     private Text jarFileText;
     String registeredDriverJar;
 
@@ -34,7 +32,6 @@ public class RegisterDriverWizardPage extends WizardPage {
 		String description = "Register a JDBC Driver in order to create connections to the Autonomous Database.\n"
                				+ "This is a one time effort after you install the plugin.";
         setDescription(description);
-        this.selection = selection;
         DriverInstance existingDriver = DriverManager.getInstance()
 				.getDriverInstanceByID(ConfigureADBConnectionProfile.TARGET_DRIVER_INSTANCE_ID);
         if(existingDriver != null)
@@ -100,11 +97,6 @@ public class RegisterDriverWizardPage extends WizardPage {
         return dialog.open();
     }
 
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
-    
 	public String getDriverJarName() {
 		return jarFileText.getText();
 	}

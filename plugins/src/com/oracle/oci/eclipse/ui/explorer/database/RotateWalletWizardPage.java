@@ -16,7 +16,6 @@ import org.eclipse.swt.widgets.Text;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 
 public class RotateWalletWizardPage extends WizardPage {
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
     String walletType;
     private Text databaseNameText;
@@ -25,7 +24,6 @@ public class RotateWalletWizardPage extends WizardPage {
         super("wizardPage");
         setTitle("Rotate Wallet");
         setDescription("");
-        this.selection = selection;
         this.instance = instance;
         this.walletType = walletType;
     }
@@ -75,11 +73,6 @@ public class RotateWalletWizardPage extends WizardPage {
         
         
         setControl(container);
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
     
 	public String getDbName() {

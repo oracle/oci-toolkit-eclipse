@@ -13,7 +13,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWizard;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.eclipse.ErrorHandler;
@@ -21,7 +20,6 @@ import com.oracle.oci.eclipse.ErrorHandler;
 public class CreateADBConnectionWizard  extends Wizard implements INewWizard {
 
     private CreateADBConnectionWizardPage page;
-    private IStructuredSelection selection;
     private AutonomousDatabaseSummary adbInstance;
 
 	public CreateADBConnectionWizard(AutonomousDatabaseSummary adbInstance) {
@@ -47,15 +45,17 @@ public class CreateADBConnectionWizard  extends Wizard implements INewWizard {
     	final String password = page.getPassword();
     	final String walletLocation = page.getWalletDirectory();
     	final String aliasName = page.getSelectedAlias();
+    	final boolean autoConnect = page.isAutoConnectProfile();  // no need to validate
     	
-    	if(!validateInput(user, password, walletLocation, aliasName))
+    	if(!validateInput(user, password, walletLocation, aliasName)) {
     		return false;
+    	}
     	
     	IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					ConfigureADBConnectionProfile.createConnectionProfile(monitor, adbInstance, user, password,walletLocation, aliasName);
+					ConfigureADBConnectionProfile.createConnectionProfile(monitor, adbInstance, user, password,walletLocation, aliasName, autoConnect);
 				} catch (Exception e) {
 					ErrorHandler.logErrorStack("Error occured while creating connection to database: " + adbInstance.getDbName(), e);
 					throw new InvocationTargetException(e);
@@ -66,7 +66,7 @@ public class CreateADBConnectionWizard  extends Wizard implements INewWizard {
         };
         
         try {
-            getContainer().run(true, false, op);
+            getContainer().run(true, true, op);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
@@ -109,14 +109,8 @@ public class CreateADBConnectionWizard  extends Wizard implements INewWizard {
     	return true;
     }
 
-    /**
-     * We will accept the selection in the workbench to see if
-     * we can initialize from it.
-     * @see IWorkbenchWizard#init(IWorkbench, IStructuredSelection)
-     */
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
-        this.selection = selection;
+        // DO NOTHING
     }
-    
 }

@@ -110,7 +110,6 @@ public class CompartmentSelectWizardPage extends WizardPage {
                 return Status.OK_STATUS;
             }
         };
-        job.schedule();
 
         tree.addListener (SWT.MeasureItem, new Listener() {
             @Override
@@ -126,7 +125,23 @@ public class CompartmentSelectWizardPage extends WizardPage {
             }
         });
 
+        addCompartmentDrivenUI(container, tree);
+
+        // wait to kick the init job until after all UI is initialized.
+        job.schedule();
+
         setControl(container);
+    }
+
+    /**
+     * Allow sub-classing wizards to add UI below the compartment tree that can be
+     * driven off the compartment selection.  By default does nothing as the compartment
+     * selection is the primary selection in the wizard.
+     * @param container 
+     * @param tree
+     */
+    protected void addCompartmentDrivenUI(Composite container, Tree tree) {
+        // nothing by default
     }
 
     private void handNodeExpanionEvent(Event e) {

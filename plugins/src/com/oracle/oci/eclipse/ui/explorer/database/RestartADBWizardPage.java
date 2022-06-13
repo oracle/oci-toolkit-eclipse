@@ -12,13 +12,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 public class RestartADBWizardPage extends WizardPage {
-    private ISelection selection;
 
     public RestartADBWizardPage(ISelection selection) {
         super("wizardPage");
         setTitle("Confirm Restart");
         setDescription("");
-        this.selection = selection;
     }
 
     @Override
@@ -30,11 +28,6 @@ public class RestartADBWizardPage extends WizardPage {
         Label terminationMsgLabel = new Label(container, SWT.NULL);
         terminationMsgLabel.setText(msg);
         setControl(container);
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
 
 }

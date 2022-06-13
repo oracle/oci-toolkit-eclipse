@@ -15,6 +15,7 @@ import com.oracle.bmc.objectstorage.model.Bucket;
 import com.oracle.bmc.objectstorage.model.BucketSummary;
 import com.oracle.bmc.objectstorage.model.ObjectSummary;
 import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
+import com.oracle.oci.eclipse.account.AuthProvider;
 import com.oracle.oci.eclipse.sdkclients.ObjStorageClient;
 
 import tests.utils.SetupConfig;
@@ -32,11 +33,14 @@ public class ObjStorageClientTest {
     public void setup() {
         SetupConfig.setProxy();
         SetupConfig.init();
+
         objStorageClient = ObjStorageClient.getInstance();
     }
 
     @Test
     public void test1_CreateBucket() throws Exception {
+        // this gets stomped on between setup() and here, so set it here.
+        AuthProvider.getInstance().updateCompartmentId(SetupConfig.COMPARTMENT_ID);
         Bucket result = objStorageClient.createBucket(bucketName);
         assertEquals(result.getName(),bucketName);
     }

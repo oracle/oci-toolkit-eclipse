@@ -12,13 +12,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 public class StartADBWizardPage extends WizardPage {
-    private ISelection selection;
 
     public StartADBWizardPage(ISelection selection) {
         super("wizardPage");
         setTitle("Start Autonomous Database");
         setDescription("");
-        this.selection = selection;
     }
 
     @Override
@@ -31,10 +29,4 @@ public class StartADBWizardPage extends WizardPage {
         terminationMsgLabel.setText(msg);
         setControl(container);
     }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
-
 }

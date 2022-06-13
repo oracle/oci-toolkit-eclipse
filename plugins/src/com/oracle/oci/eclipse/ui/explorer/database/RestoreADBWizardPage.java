@@ -29,7 +29,6 @@ import com.oracle.oci.eclipse.Activator;
 import com.oracle.oci.eclipse.Icons;
 
 public class RestoreADBWizardPage extends WizardPage {
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
     private Label fromDateLabel;
 	private Label toDateLabel;
@@ -44,7 +43,6 @@ public class RestoreADBWizardPage extends WizardPage {
         super("wizardPage");
         setTitle("Restore Autonomous Database");
         setDescription("");
-        this.selection = selection;
         this.instance = instance;
         this.backupList = backupList;
     }
@@ -178,11 +176,6 @@ public class RestoreADBWizardPage extends WizardPage {
 		container.layout();
 	}
 
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
-    
 	public Date getRestoreTimeStamp() {
 		final TableItem item[] = table.getSelection();
 		String backupName = null;

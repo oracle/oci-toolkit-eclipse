@@ -6,11 +6,11 @@ package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Properties;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
@@ -18,12 +18,12 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
 
 public class DownloadADBWalletWizard  extends Wizard implements INewWizard {
 
     private DownloadADBWalletWizardPage page;
-    private ISelection selection;
     private final AutonomousDatabaseSummary instance;
     private final String walletType;
 
@@ -62,6 +62,10 @@ public class DownloadADBWalletWizard  extends Wizard implements INewWizard {
             @Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				ADBInstanceClient.getInstance().downloadWallet(instance, walletType, walletPassword, walletDirectory);
+				String passwordKey = PreferencesWrapper.createSecurePreferenceKey(instance);
+				Properties props = new Properties();
+				props.put(DBUtils.TOOL_PROPERTIES_KEY_ADMIN_PASSWORD_SECURE_KEY_NAME, passwordKey);
+				DBUtils.writeToToolProperties(new File(walletDirectory), props);
 				monitor.done();
 			}
         };
@@ -87,7 +91,7 @@ public class DownloadADBWalletWizard  extends Wizard implements INewWizard {
      */
     @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
-        this.selection = selection;
+        // DO NOTHING
     }
     
     private boolean isValidPassword() {

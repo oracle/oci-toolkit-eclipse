@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## 1.3.2
+### Added
+- Autonomous Database Support
+   - New Update Network Access dialog allows configuration of one-way TLS for ADB instances.
+   - DB creation wizard auto-generates and locally secure stores new db passwords.
+   - New TNS Strings dialog to get ADB connection strings quickly.
+   - New copy admin password to clipboard action.
+- Update to OCI Java SDK 2.x
+
 ## 1.3.1
 ### Fixed
 - Eclipse Preferences to choose any active profile from the configuration even with no DEFAULT profile.

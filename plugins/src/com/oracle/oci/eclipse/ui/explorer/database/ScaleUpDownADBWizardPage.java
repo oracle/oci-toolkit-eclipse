@@ -21,14 +21,12 @@ public class ScaleUpDownADBWizardPage extends WizardPage {
 	private Spinner cpuCoreCountSpinner;
     private Spinner storageInTBSpinner;
     private Button autoScalingEnabledCheckBox;
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
 
     public ScaleUpDownADBWizardPage(ISelection selection, AutonomousDatabaseSummary instance) {
         super("wizardPage");
         setTitle("ADB Scale Up/Down");
         setDescription("");
-        this.selection = selection;
         this.instance = instance;
     }
 
@@ -75,11 +73,6 @@ public class ScaleUpDownADBWizardPage extends WizardPage {
         }
         
         setControl(container);
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
 
     public String getCPUCoreCount() {

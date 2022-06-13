@@ -10,6 +10,7 @@ import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
 
+import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.identity.model.AuthToken;
 import com.oracle.oci.eclipse.ErrorHandler;
 
@@ -20,7 +21,7 @@ public class PreferencesWrapper {
     static String pathName = SECURE_STORAGE_KEY_PATH + PREFERENCES_LOCATION;
     private static Preferences systemPrefs = Preferences.userRoot().node(PREFERENCES_LOCATION);
     private static ISecurePreferences securePreferences = SecurePreferencesFactory.getDefault().node(pathName);
-    private final static String VERSION = "1.3.1";
+    private final static String VERSION = "1.3.2";
 
     public static void setRegion(String regionId) {
         systemPrefs.put("region", regionId);
@@ -80,5 +81,17 @@ public class PreferencesWrapper {
 
     public static String getUserAgent() {
         return String.format("Oracle-EclipseToolkit/%s", VERSION);
+    }
+
+    public static ISecurePreferences getSecurePreferences() {
+        return securePreferences;
+    }
+
+    public static String createSecurePreferenceKey(String compartmentId, String databaseId) {
+        return String.format("ADMIN_PASS_%s_%s", compartmentId, databaseId);
+    }
+
+    public static String createSecurePreferenceKey(AutonomousDatabaseSummary instance) {
+        return createSecurePreferenceKey(instance.getCompartmentId(), instance.getId());
     }
 }

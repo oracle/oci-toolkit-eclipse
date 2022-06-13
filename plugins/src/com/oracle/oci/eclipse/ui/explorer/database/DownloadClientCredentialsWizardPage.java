@@ -26,7 +26,6 @@ import com.oracle.bmc.database.model.AutonomousDatabaseWallet;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
 
 public class DownloadClientCredentialsWizardPage extends WizardPage {
-    private ISelection selection;
     AutonomousDatabaseSummary instance;
     Map<String, AutonomousDatabaseWallet> walletTypeMap;
     private Combo walletTypeList;
@@ -39,7 +38,6 @@ public class DownloadClientCredentialsWizardPage extends WizardPage {
         String description = "You will need the client credentials and connection information to connect to your database." + "\n"
                              +"The client credentials include the wallet, which is required for all types of connections.";
         setDescription(description);
-        this.selection = selection;
         this.instance = instance;
         this.walletTypeMap = walletTypeMap;
         this.isDedicatedInstance = (instance.getIsDedicated() != null && instance.getIsDedicated());
@@ -163,10 +161,4 @@ public class DownloadClientCredentialsWizardPage extends WizardPage {
 		
         setControl(innerTopContainer);
     }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
-    }
-    
 }

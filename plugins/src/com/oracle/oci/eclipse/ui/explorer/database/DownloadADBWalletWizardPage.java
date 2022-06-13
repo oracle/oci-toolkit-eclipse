@@ -102,6 +102,7 @@ public class DownloadADBWalletWizardPage extends WizardPage {
        GridData gd2 = new GridData(GridData.FILL_HORIZONTAL);
        confirmWalletPasswordText.setLayoutData(gd2);
        
+       @SuppressWarnings("unused")
        Label passwordRule = new Label(innerContainer, SWT.NULL);
        Label passwordRule1 = new Label(innerContainer, SWT.NULL);
        passwordRule1.setText(
@@ -116,11 +117,6 @@ public class DownloadADBWalletWizardPage extends WizardPage {
     	if(currentWalletDir != null && (!currentWalletDir.equals("")))
     		dialog.setFilterPath(currentWalletDir);
         return dialog.open();
-    }
-
-    private void updateStatus(String message) {
-        setErrorMessage(message);
-        setPageComplete(message == null);
     }
 
     public String getPassword() {
