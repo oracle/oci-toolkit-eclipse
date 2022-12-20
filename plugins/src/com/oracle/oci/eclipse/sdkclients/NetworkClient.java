@@ -19,7 +19,7 @@ public class NetworkClient extends BaseClient {
 
     public NetworkClient() {
         if (virtualNetworkClient == null) {
-            virtualNetworkClient = createADBInstanceClient();
+            virtualNetworkClient = createNetworkClient();
         }
 
     }
@@ -27,10 +27,10 @@ public class NetworkClient extends BaseClient {
     @Override
     public void updateClient() {
         close();
-        createADBInstanceClient();
+        createNetworkClient();
     }
 
-    private VirtualNetworkClient createADBInstanceClient() {
+    private VirtualNetworkClient createNetworkClient() {
         virtualNetworkClient = new VirtualNetworkClient(AuthProvider.getInstance().getProvider());
         virtualNetworkClient.setRegion(AuthProvider.getInstance().getRegion());
         return virtualNetworkClient;

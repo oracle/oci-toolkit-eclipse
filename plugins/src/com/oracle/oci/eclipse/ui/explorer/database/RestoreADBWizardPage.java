@@ -4,11 +4,12 @@
  */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -27,6 +28,7 @@ import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.eclipse.Activator;
 import com.oracle.oci.eclipse.Icons;
+import com.oracle.oci.eclipse.util.DateUtils;
 
 public class RestoreADBWizardPage extends WizardPage {
     AutonomousDatabaseSummary instance;
@@ -34,8 +36,8 @@ public class RestoreADBWizardPage extends WizardPage {
 	private Label toDateLabel;
 	private DateTime fromDateTime;
 	private DateTime toDateTime;
-	private Date fromDate;
-	private Date toDate;
+	private LocalDateTime fromDate;
+	private LocalDateTime toDate;
 	private Table table;
 	List<AutonomousDatabaseBackupSummary> backupList;
 
@@ -73,14 +75,13 @@ public class RestoreADBWizardPage extends WizardPage {
         fromDateTime.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         toDateTime = new DateTime(innerTopContainer, SWT.DATE | SWT.DROP_DOWN);
         toDateTime.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
-        toDate = new Date();
-        fromDate = DateUtils.addDays(toDate, -7);
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(fromDate);
+
+        toDate = LocalDateTime.now();
+        fromDate = toDate.minusDays(7);
+
         // set default value for From date widget
-        fromDateTime.setDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        
+        DateUtils.apply(fromDate, fromDateTime);
+
 		fromDateTime.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				System.out.println("From date changed");
@@ -140,35 +141,37 @@ public class RestoreADBWizardPage extends WizardPage {
     }
     
     private void populateTableData() {
-    	for (AutonomousDatabaseBackupSummary backup : backupList) {
-			if(backup.getTimeEnded().compareTo(DateUtils.addDays(fromDate, -1))>0 && backup.getTimeEnded().compareTo(toDate)<=0) {
-				TableItem item = new TableItem(table, SWT.NONE);
-	            item.setText(1,backup.getDisplayName());
-	            item.setImage(2, Activator.getImage(Icons.BACKUP_ACTIVE_STATE.getPath()));
-	            item.setText(2,backup.getLifecycleState().getValue());
-	            item.setText(3,backup.getType().getValue());
-			}
-		}
+        for (AutonomousDatabaseBackupSummary backup : backupList) {
+            Instant timeEnded = backup.getTimeEnded().toInstant();
+            Instant fromDateInstant = DateUtils.convert(fromDate.minusDays(-1));
+            Instant toDateInstant = DateUtils.convert(toDate);
+            if (timeEnded.isAfter(fromDateInstant)
+                    && timeEnded.isBefore(toDateInstant)) {
+                TableItem item = new TableItem(table, SWT.NONE);
+                item.setText(1, backup.getDisplayName());
+                item.setImage(2, Activator.getImage(Icons.BACKUP_ACTIVE_STATE.getPath()));
+                item.setText(2, backup.getLifecycleState().getValue());
+                item.setText(3, backup.getType().getValue());
+            }
+        }
     }
-    
-	private void handleDateTimeChange(Composite container, DateTime newDateTime, boolean isFromDateChanged) {
+
+	private void handleDateTimeChange(Composite container, DateTime newDateTimeCtrl, boolean isFromDateChanged) {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.DAY_OF_MONTH, newDateTime.getDay());
-		calendar.set(Calendar.MONTH, newDateTime.getMonth());
-		calendar.set(Calendar.YEAR, newDateTime.getYear());
+		calendar.set(Calendar.DAY_OF_MONTH, newDateTimeCtrl.getDay());
+		calendar.set(Calendar.MONTH, newDateTimeCtrl.getMonth());
+		calendar.set(Calendar.YEAR, newDateTimeCtrl.getYear());
 		if (isFromDateChanged) {
-			fromDate = calendar.getTime();
+			fromDate = DateUtils.convert(calendar.getTime());
 			if (fromDate.compareTo(toDate) > 0) {
 				toDate = fromDate;
-				toDateTime.setDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
-						calendar.get(Calendar.DAY_OF_MONTH));
+				DateUtils.apply(fromDate, newDateTimeCtrl);
 			}
 		} else {
-			toDate = calendar.getTime();
+			toDate = DateUtils.convert(calendar.getTime());
 			if (toDate.compareTo(fromDate) < 0) {
 				fromDate = toDate;
-				fromDateTime.setDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
-						calendar.get(Calendar.DAY_OF_MONTH));
+				DateUtils.apply(toDate, newDateTimeCtrl);
 			}
 		}
 		table.removeAll();

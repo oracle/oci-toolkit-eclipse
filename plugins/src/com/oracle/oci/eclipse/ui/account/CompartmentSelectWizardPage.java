@@ -139,9 +139,11 @@ public class CompartmentSelectWizardPage extends WizardPage {
      * selection is the primary selection in the wizard.
      * @param container 
      * @param tree
+     * @return 
      */
-    protected void addCompartmentDrivenUI(Composite container, Tree tree) {
+    protected Composite addCompartmentDrivenUI(Composite container, Tree tree) {
         // nothing by default
+        return null;
     }
 
     private void handNodeExpanionEvent(Event e) {

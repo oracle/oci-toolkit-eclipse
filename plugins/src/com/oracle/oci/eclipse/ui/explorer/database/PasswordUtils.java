@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,9 +14,14 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.equinox.security.storage.ISecurePreferences;
+import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.swt.widgets.Text;
 
+import com.oracle.bmc.database.model.AutonomousDatabase;
 import com.oracle.oci.eclipse.Activator;
+import com.oracle.oci.eclipse.ErrorHandler;
+import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.ui.explorer.database.validate.InputValidator;
 import com.oracle.oci.eclipse.ui.explorer.database.validate.PasswordInputValidator;
 
@@ -163,5 +169,20 @@ public class PasswordUtils {
 
     private static IStatus error(String message) {
         return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
+    }
+
+    public static void storePasswordLocally(AutonomousDatabase autonomousDatabase, String password) {
+        storePasswordLocally(autonomousDatabase, "ADMIN", password);
+    }
+
+    public static void storePasswordLocally(AutonomousDatabase autonomousDatabase, String userName, String password) {
+        String key = PreferencesWrapper.createSecurePreferenceKey(userName, autonomousDatabase.getCompartmentId(), autonomousDatabase.getId());
+        try {
+            ISecurePreferences securePreferences = PreferencesWrapper.getSecurePreferences();
+            securePreferences.put(key, password, true);
+            securePreferences.flush();
+        } catch (StorageException | IOException e) {
+           ErrorHandler.logErrorStack("Error storing admin password", e);
+        }
     }
 }

@@ -25,6 +25,7 @@ import static com.oracle.oci.eclipse.ui.explorer.database.ADBConstants.getSuppor
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -57,6 +58,8 @@ import com.oracle.oci.eclipse.ui.explorer.common.BaseTableLabelProvider;
 import com.oracle.oci.eclipse.ui.explorer.database.ADBConstants;
 import com.oracle.oci.eclipse.ui.explorer.database.actions.ADBInstanceAction;
 import com.oracle.oci.eclipse.ui.explorer.database.actions.CreateADBInstanceAction;
+import com.oracle.oci.eclipse.ui.explorer.database.actions.CustomADBInstanceAction;
+import com.oracle.oci.eclipse.ui.explorer.database.actions.CustomADBInstanceActionFactory;
 import com.oracle.oci.eclipse.ui.explorer.database.actions.DetailsADBInstanceAction;
 import com.oracle.oci.eclipse.ui.explorer.database.actions.RefreshADBInstanceAction;
 import com.oracle.oci.eclipse.ui.explorer.database.actions.RegisterDriverAction;
@@ -78,6 +81,7 @@ public class ADBInstanceTable  extends BaseTable {
     private static final String WORKLOAD_DW = "Data Warehouse";
     private static final String WORKLOAD_OLTP = "Transaction Processing";
     private static final String WORKLOAD_AJD = "JSON Database";
+    private static final String WORKLOAD_APEX = "APEX";
     private static final String WORKLOAD_ALL = "All";
     Combo combo;
 
@@ -190,6 +194,7 @@ public class ADBInstanceTable  extends BaseTable {
         manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_ADW_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Dw, ADBInstanceTable.this));
         manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_ATP_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Oltp, ADBInstanceTable.this));
         manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_AJD_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Ajd, ADBInstanceTable.this));
+        manager.add(new CreateADBInstanceAction(ADBConstants.CREATE_APEX_INSTANCE, CreateAutonomousDatabaseBase.DbWorkload.Apex, ADBInstanceTable.this));
         manager.add(new Separator());
 
         if (getSelectedObjects().size() ==1) {
@@ -208,6 +213,14 @@ public class ADBInstanceTable  extends BaseTable {
 
         if(!disableCreateConnectionOption) {
             manager.add(new Separator());
+            List<CustomADBInstanceActionFactory> databaseActionFactories = 
+                    Activator.getDatabaseActionFactories();
+            if (!databaseActionFactories.isEmpty()) {
+                for (CustomADBInstanceActionFactory factory : databaseActionFactories) {
+                    Optional<CustomADBInstanceAction> action = factory.create(this);
+                    action.ifPresent(a -> {manager.add(a);});
+                }
+            }
             manager.add(new RegisterDriverAction(ADBConstants.REGISTER_DRIVER));
         }
     }
@@ -225,6 +238,7 @@ public class ADBInstanceTable  extends BaseTable {
         combo.add(WORKLOAD_DW);
         combo.add(WORKLOAD_OLTP);
         combo.add(WORKLOAD_AJD);
+        combo.add(WORKLOAD_APEX);
 
         // default value
         combo.select(0);
@@ -261,7 +275,11 @@ public class ADBInstanceTable  extends BaseTable {
             workload = DbWorkload.Oltp;
         } else if(WORKLOAD_AJD.equals(workloadType)) {
             workload = DbWorkload.Ajd;
-        } else {
+        } else if (WORKLOAD_APEX.equals(workloadType)) {
+            // TODO: must upgrade to OCI Java SDK 2.0
+            workload = DbWorkload.Apex;
+        }
+        else {
             workload = DbWorkload.UnknownEnumValue;
         }
         Job instanceListJob = new Job("Get ADB Instances") {

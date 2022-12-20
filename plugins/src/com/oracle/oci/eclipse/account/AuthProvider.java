@@ -19,14 +19,14 @@ public class AuthProvider {
 	public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
     private static AuthProvider single_instance = null;
 
-    private static AuthenticationDetailsProvider provider;
+    private AuthenticationDetailsProvider provider;
     private String currentProfileName = PreferencesWrapper.getProfile();
     private String currentConfigFileName = PreferencesWrapper.getConfigFileName();
     private String currentRegionName = PreferencesWrapper.getRegion();
     private String currentCompartmentId;
     private String currentCompartmentName = ROOT_COMPARTMENT_NAME;
 
-    public static AuthProvider getInstance()
+    public synchronized static AuthProvider getInstance()
     {
         if (single_instance == null) {
             single_instance = new AuthProvider();
@@ -49,7 +49,7 @@ public class AuthProvider {
         return provider;
     }
 
-    public AuthenticationDetailsProvider getProvider() {
+    public synchronized AuthenticationDetailsProvider getProvider() {
         if (provider == null) {
             provider = createProvider();
         }
@@ -74,34 +74,43 @@ public class AuthProvider {
     }
 
     public void updateCompartmentId(String compartmentId) {
+        String oldCompartmentId = null;
+        synchronized(this) {
+            oldCompartmentId = this.currentCompartmentId;
+            currentCompartmentId = compartmentId;
+        }
+        // don't hold locks while calling outside.
         ClientUpdateManager.getInstance().getSupportViews().firePropertyChange("currentCompartmentId",
-                this.currentCompartmentId, compartmentId);
+                oldCompartmentId, compartmentId);
+    }
+
+    public synchronized void setCompartmentId(String compartmentId) {
         currentCompartmentId = compartmentId;
     }
 
-    public void setCompartmentId(String compartmentId) {
-        currentCompartmentId = compartmentId;
-    }
-
-    public String getCompartmentId() {
+    public synchronized String getCompartmentId() {
         return currentCompartmentId;
     }
     
-    public void setCompartmentName(String currentCompartmentName) {
+    public synchronized void setCompartmentName(String currentCompartmentName) {
     	this.currentCompartmentName = currentCompartmentName;
     }
 
-    public String getCompartmentName() {
+    public synchronized String getCompartmentName() {
     	return currentCompartmentName;
     }
 
-    public void updateRegion(String regionId) {
+    public void updateRegion(final String regionId) {
+        String oldRegionId = null;
+        synchronized(this) {
+            oldRegionId = this.currentRegionName;
+            currentRegionName = regionId;
+        }
         PreferencesWrapper.setRegion(regionId);
         ClientUpdateManager.getInstance().getSupportRegion().firePropertyChange("currentRegionName",
-                this.currentRegionName, regionId);
+                oldRegionId, regionId);
         ClientUpdateManager.getInstance().getSupportViews().firePropertyChange("currentRegionName",
-                this.currentRegionName, regionId);
-        currentRegionName = regionId;
+                oldRegionId, regionId);
     }
 
     public Region getRegion() {
@@ -140,8 +149,7 @@ public class AuthProvider {
         ClientRuntime.setClientUserAgent(PreferencesWrapper.getUserAgent());
     }
 
-    @Override
-    public void finalize() throws Throwable{
+    public synchronized void dispose() throws Throwable{
         single_instance = null;
     }
 

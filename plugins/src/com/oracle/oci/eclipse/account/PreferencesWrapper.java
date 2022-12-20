@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.eclipse.account;
 
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import org.eclipse.equinox.security.storage.ISecurePreferences;
@@ -21,8 +22,22 @@ public class PreferencesWrapper {
     static String pathName = SECURE_STORAGE_KEY_PATH + PREFERENCES_LOCATION;
     private static Preferences systemPrefs = Preferences.userRoot().node(PREFERENCES_LOCATION);
     private static ISecurePreferences securePreferences = SecurePreferencesFactory.getDefault().node(pathName);
-    private final static String VERSION = "1.3.2";
+    private final static String VERSION = "1.3.3";
 
+    private final static String OCI_IDE_DEBUG_CLEAR_PREFS_KEY = "oracle.debug.oci-ide-prefs.clear";
+    
+    static
+    {
+        if (System.getProperty(OCI_IDE_DEBUG_CLEAR_PREFS_KEY) != null)
+        {
+            try {
+                systemPrefs.clear();
+                ErrorHandler.logInfo("Global user preferences clear");
+            } catch (BackingStoreException e) {
+                ErrorHandler.logErrorStack("Error clearing system prefs", e);
+            }
+        }
+    }
     public static void setRegion(String regionId) {
         systemPrefs.put("region", regionId);
         ErrorHandler.logInfo("Setting the region to: "+ regionId);
@@ -88,10 +103,18 @@ public class PreferencesWrapper {
     }
 
     public static String createSecurePreferenceKey(String compartmentId, String databaseId) {
-        return String.format("ADMIN_PASS_%s_%s", compartmentId, databaseId);
+        return createSecurePreferenceKey("ADMIN", compartmentId, databaseId);
+    }
+
+    public static String createSecurePreferenceKey(String userName, String compartmentId, String databaseId) {
+        return String.format("%s_PASS_%s_%s", userName, compartmentId, databaseId);
     }
 
     public static String createSecurePreferenceKey(AutonomousDatabaseSummary instance) {
         return createSecurePreferenceKey(instance.getCompartmentId(), instance.getId());
+    }
+    
+    public static String createSecurePreferenceKeyForOCISecret(String userName, String compartmentId, String databaseId) {
+        return String.format("%s_VAULTKEY_%s_%s", userName, compartmentId, databaseId);
     }
 }

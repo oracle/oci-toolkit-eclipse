@@ -11,7 +11,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
@@ -192,15 +191,13 @@ public class ObjStorageClient extends BaseClient {
 
     public void downloadObject(String bucketName, String objectName, String downloadPath) throws Exception {
 
-        InputStream inStream = getObjectDetails(bucketName, objectName).getInputStream();
-
-        File targetFile = new File(downloadPath);
-        java.nio.file.Files.copy(
-                inStream,
-                targetFile.toPath(),
-                StandardCopyOption.REPLACE_EXISTING);
-        IOUtils.closeQuietly(inStream);
-
+        try (InputStream inStream = getObjectDetails(bucketName, objectName).getInputStream()) {
+            File targetFile = new File(downloadPath);
+            java.nio.file.Files.copy(
+                    inStream,
+                    targetFile.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
         ErrorHandler.logInfo("Object download: " + bucketName + " - " + objectName );
     }
 

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -535,10 +534,10 @@ public class UpdateADBAccessControlWizardPage extends WizardPage {
         }
 
         public int hashCode() {
-            HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
-            hashCodeBuilder.append(isMtlsConnectionRequired);
-            hashCodeBuilder.append(whitelistedIps.toArray());
-            return hashCodeBuilder.toHashCode();
+            int hashCode = 53;
+            hashCode += 17 * (isMtlsConnectionRequired ? 1 : 0);
+            hashCode += 13 * whitelistedIps.hashCode();
+            return hashCode;
         }
     }
 

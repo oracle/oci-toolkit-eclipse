@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.oracle.bmc.OCID;
 import com.oracle.bmc.core.model.Vcn;
 
@@ -120,7 +118,7 @@ public class OcidBasedAccessControlType extends VCNBasedAccessControlType {
     {
         if (this.ipList != null && !this.ipList.isEmpty())
         {
-            return StringUtils.join(this.ipList.toArray(new String[0]), ';');
+            return String.join(";", this.ipList.toArray(new String[0]));
         }
         return "";
     }
