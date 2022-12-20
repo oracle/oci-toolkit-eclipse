@@ -22,8 +22,7 @@ public abstract class BaseClient implements PropertyChangeListener {
     @Override
     public abstract void propertyChange(PropertyChangeEvent evt);
 
-    @Override
-    public void finalize() throws Throwable {
+    public synchronized void dispose() throws Throwable {
         close();
     }
 

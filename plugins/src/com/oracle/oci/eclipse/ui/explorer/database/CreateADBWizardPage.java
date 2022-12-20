@@ -5,14 +5,9 @@
 package com.oracle.oci.eclipse.ui.explorer.database;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.IStatus;
@@ -44,73 +39,74 @@ import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.LicenseModel;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.eclipse.Activator;
-import com.oracle.oci.eclipse.Icons;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
 import com.oracle.oci.eclipse.sdkclients.IdentClient;
 import com.oracle.oci.eclipse.ui.account.CompartmentSelectWizard;
 import com.oracle.oci.eclipse.ui.explorer.common.CustomWizardDialog;
-import com.oracle.oci.eclipse.ui.explorer.database.validate.InputValidator;
-import com.oracle.oci.eclipse.ui.explorer.database.validate.PasswordInputValidator;
+import com.oracle.oci.eclipse.ui.explorer.database.editor.PasswordPanel;
 
 public class CreateADBWizardPage extends WizardPage {
 
-	private Text displayNameText;
-	private Text databaseNameText;
-	private Label dbNameRule1;
-	private Text compartmentText;
+    private Text displayNameText;
+    private Text databaseNameText;
+    private Label dbNameRule1;
+    private Text compartmentText;
 
-	private Group deploymentTypeGroup;
-	private Button serverlessDeploymentRadioButton;
-	private Button dedicatedDeploymentRadioButton;
+    private Group deploymentTypeGroup;
+    private Button serverlessDeploymentRadioButton;
+    private Button dedicatedDeploymentRadioButton;
 
-	private Label alwaysFreeLabel;
-	private Button alwaysFreeCheckButton;
-	private Spinner cpuCoreCountSpinner;
-	private Label storageInTBLabel;
-	private Spinner storageInTBSpinner;
-	private Text alwaysFreeStorageInTBText;
-	private Label autoScalingLabel;
-	private Button autoScalingEnabledCheckBox;
+    private Label alwaysFreeLabel;
+    private Button alwaysFreeCheckButton;
+    private Spinner cpuCoreCountSpinner;
+    private Label storageInTBLabel;
+    private Spinner storageInTBSpinner;
+    private Text alwaysFreeStorageInTBText;
+    private Label autoScalingLabel;
+    private Button autoScalingEnabledCheckBox;
 
-	private Label adminUserNameLabel;
-	private Text adminUserNameText;
-	private Text adminPasswordText;
-	private Text confirmAdminPasswordText;
-        private Button saveToSecureStoreBtn;
+    private Label adminUserNameLabel;
+    private Text adminUserNameText;
 
-	private Label licenseTypeLabel;
-	private Group licenseTypeGroup;
-	private Button licenseTypeOwnRadioButton;
-	private Button licenseTypeIncludedRadioButton;
+    private Label licenseTypeLabel;
+    private Group licenseTypeGroup;
+    private Button licenseTypeOwnRadioButton;
+    private Button licenseTypeIncludedRadioButton;
 
-	private Label containerDBCompartmentLabel;
-	private Composite adcCompartmentContainer;
-	private Text containerDBCompartmentText;
-	private Button selectContainerDBCompartmentButton;
-	private Label containerDBLabel;
-	private Combo containerDBList;
-	private Compartment selectedADBCompartment;
-	private Compartment selectedContainerDBCompartment;
-	private Compartment defaultContainerDBCompartment;
+    private Label containerDBCompartmentLabel;
+    private Composite adcCompartmentContainer;
+    private Text containerDBCompartmentText;
+    private Button selectContainerDBCompartmentButton;
+    private Label containerDBLabel;
+    private Combo containerDBList;
+    private Compartment selectedADBCompartment;
+    private Compartment selectedContainerDBCompartment;
+    private Compartment defaultContainerDBCompartment;
 
-	private boolean isInitialized; // = false
+    // private ISelection selection;
+    private boolean isInitialized; // = false
 
-	private Map<String, String> containertMap = new TreeMap<String, String>();
-	private DbWorkload workloadType;
-	
-	private final Object lock = new Object();
-	private boolean isDedicatedSelected = false;
+    private Combo databaseVersionCbo;
+//    private Label version21cWarning;
+//    private Label warningIcon;
+    private Map<String, String> containertMap = new TreeMap<String, String>();
+    private DbWorkload workloadType;
 
-	public CreateADBWizardPage(ISelection selection, DbWorkload workloadType) {
-		super("wizardPage");
-		setTitle("Create Autonomous Database");
-		setDescription("This wizard creates a new Autonomous Database. Please enter the required details.");
-		this.workloadType = workloadType;
-		Compartment rootCompartment = IdentClient.getInstance().getRootCompartment();
-		this.selectedADBCompartment = rootCompartment;
-		this.defaultContainerDBCompartment = rootCompartment;
-		setPageComplete(false); // password starts out blank and must be entered to complete
-	}
+    private final Object lock = new Object();
+    private boolean isDedicatedSelected = false;
+    private PasswordPanel passwordPanel;
+
+    public CreateADBWizardPage(ISelection selection, DbWorkload workloadType) {
+        super("wizardPage");
+        setTitle("Create Autonomous Database");
+        setDescription("This wizard creates a new Autonomous Database. Please enter the required details.");
+        // this.selection = selection;
+        this.workloadType = workloadType;
+        Compartment rootCompartment = IdentClient.getInstance().getRootCompartment();
+        this.selectedADBCompartment = rootCompartment;
+        this.defaultContainerDBCompartment = rootCompartment;
+        setPageComplete(false); // password starts out blank and must be entered to complete
+    }
 
     @Override
     public void createControl(Composite parent) {
@@ -119,7 +115,7 @@ public class CreateADBWizardPage extends WizardPage {
         GridLayout layout = new GridLayout();
         container.setLayout(layout);
         layout.numColumns = 2;
-        layout.verticalSpacing = 9;
+        //layout.verticalSpacing = 9;
 
         Label compartmentLabel = new Label(container, SWT.NULL);
         compartmentLabel.setText("&Choose a compartment:");
@@ -160,14 +156,46 @@ public class CreateADBWizardPage extends WizardPage {
 		databaseNameText.setLayoutData(gd1);
 		databaseNameText.setText("DB" + defaultDBName);
 
-		new Label(container, SWT.NULL);
-		dbNameRule1 = new Label(container, SWT.NULL);
-		dbNameRule1.setText(
-				"The name must contain only letters and numbers, starting with a letter. Maximum of 14 characters.");
-		
-		createAlwaysFreeControl(container);
-		
-		
+        new Label(container, SWT.NULL);
+        dbNameRule1 = new Label(container, SWT.NULL);
+        dbNameRule1.setText(
+                "The name must contain only letters and numbers, starting with a letter. Maximum of 14 characters.");
+
+        createAlwaysFreeControl(container);
+
+        Label databaseVersion = new Label(container, SWT.NULL);
+        databaseVersion.setText("Database &Version:");
+
+        Composite versionPanel = new Composite(container, SWT.NONE);
+        versionPanel.setLayout(new GridLayout(1, false));
+        GridDataFactory.defaultsFor(versionPanel).align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(versionPanel);
+        databaseVersionCbo = new Combo(versionPanel, SWT.DROP_DOWN | SWT.READ_ONLY);
+        databaseVersionCbo.add("19c");
+        databaseVersionCbo.select(0);
+        GridDataFactory.defaultsFor(databaseVersionCbo).align(SWT.FILL, SWT.CENTER).indent(0,5).grab(true,true)
+            .applyTo(databaseVersionCbo);
+
+//		warningIcon = new Label(versionPanel, SWT.NONE);
+//		version21cWarning = new Label(versionPanel, SWT.WRAP);
+//		GridDataFactory.defaultsFor(version21cWarning).grab(true, false).align(SWT.FILL, SWT.FILL).applyTo(version21cWarning);
+//		databaseVersionCbo.addSelectionListener(new SelectionAdapter() {
+//            @Override
+//            public void widgetSelected(SelectionEvent e) {
+//                String text = databaseVersionCbo.getText();
+//                if ("21c".equals(text))
+//                {
+//                    version21cWarning.setText("Free Tier Autonomous Databases using Oracle Database 21c cannot currently be upgraded to paid instances.");
+//                    warningIcon.setImage(PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJS_WARN_TSK));
+//                }
+//                else
+//                {
+//                    version21cWarning.setText("");
+//                    warningIcon.setImage(null);
+//                }
+//                version21cWarning.getParent().layout();
+//            }
+//        });
+
 		Label cpuCoreCountLabel = new Label(container, SWT.NULL);
 		cpuCoreCountLabel.setText("&CPU core count:");
 		cpuCoreCountSpinner = new Spinner(container, SWT.BORDER | SWT.SINGLE);
@@ -193,67 +221,20 @@ public class CreateADBWizardPage extends WizardPage {
 		adminUserNameText.setText("ADMIN");
 		adminUserNameText.setEditable(false);
 
-		Label adminPasswordLabel = new Label(container, SWT.NULL);
-		adminPasswordLabel.setText("&Password:");
-		Composite compPasswordPanel = new Composite(container, SWT.NULL);
-		GridLayout passwordLayout = new GridLayout(3, false);
-		passwordLayout.marginWidth = 0;
-		passwordLayout.marginHeight = 0;
-		compPasswordPanel.setLayout(passwordLayout);
-		GridDataFactory.defaultsFor(compPasswordPanel).span(1,1).grab(true, true).indent(0, 0)
-			.align(SWT.FILL, SWT.CENTER).applyTo(compPasswordPanel);
-		adminPasswordText = new Text(compPasswordPanel, SWT.BORDER | SWT.PASSWORD);
-		GridData gd7 = new GridData(GridData.FILL_HORIZONTAL | GridData.GRAB_HORIZONTAL);
-		adminPasswordText.setLayoutData(gd7);
-		ModifyListener passwordListener = new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				updateStatus(validate());
-			}
-		};
-		adminPasswordText.addModifyListener(passwordListener);
-		Button generateBtn = new Button(compPasswordPanel, SWT.PUSH);
-		generateBtn.setImage(Activator.getImage(Icons.GENERATE_RANDOM_PASSWORD.getPath()));
-		generateBtn.setToolTipText("Generate Random Password");
+		this.passwordPanel = new PasswordPanel();
+		passwordPanel.createControls(container);
 
-		Button copyToClipboard = new Button(compPasswordPanel, SWT.PUSH);
-		copyToClipboard.setImage(Activator.getImage(Icons.COPY_TO_CLIPBOARD_CUSTOM.getPath()));
-		copyToClipboard.setToolTipText("Copy Password to Clipboard");
-		copyToClipboard.addSelectionListener(new SelectionAdapter() {
+        Consumer<IStatus> f = new Consumer<IStatus> () {
+
             @Override
-            public void widgetSelected(SelectionEvent e) {
-                DBUtils.copyPasswordToClipboard(e.display, adminPasswordText.getText());
+            public void accept(IStatus status) {
+                if (status.isOK()) {
+                    status = validate();
+                }
+                updateStatus(status);
             }
-        });
+        };
 
-	    new Label(container, SWT.NULL);
-        Label passwordGeneratorInfo = new Label(container, SWT.NULL);
-        passwordGeneratorInfo.setText("You can use the 'Generate Random Password' button (with the dice icon)\n"
-                + " to generate a password that fits the minimum requirements for the ADMIN password.");
-        GridData gData = GridDataFactory.swtDefaults().align(SWT.BEGINNING, SWT.BEGINNING).create();
-        passwordGeneratorInfo.setLayoutData(gData);
-
-		Label confirmAdminPasswordLabel = new Label(container, SWT.NULL);
-		confirmAdminPasswordLabel.setText("&Confirm password:");
-		confirmAdminPasswordText = new Text(container, SWT.BORDER | SWT.PASSWORD);
-		GridData gd8 = new GridData(GridData.FILL_HORIZONTAL);
-		confirmAdminPasswordText.setLayoutData(gd8);
-		confirmAdminPasswordText.addModifyListener(passwordListener);
-		generateBtn.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                final String newPass = generateAdminPassword();
-                adminPasswordText.setText(newPass);
-                confirmAdminPasswordText.setText(newPass);
-            }
-        });
-
-		new Label(container, SWT.NONE);
-		this.saveToSecureStoreBtn = new Button(container, SWT.CHECK);
-		saveToSecureStoreBtn.setText("Save password to Eclipse Secure Store");
-		saveToSecureStoreBtn.setSelection(true);
-		GridDataFactory.defaultsFor(saveToSecureStoreBtn).applyTo(saveToSecureStoreBtn);
-		
 		new Label(container, SWT.NULL);
 		Label passwordRule1 = new Label(container, SWT.NULL);
 		passwordRule1.setText("Password must be 12 to 30 characters and contain at least one uppercase letter,\n"
@@ -276,7 +257,7 @@ public class CreateADBWizardPage extends WizardPage {
 			dedicatedDeploymentRadioButton.setText("Dedicated Infrastructure");
 			serverlessDeploymentRadioButton.setSelection(true);
 		}
-		
+
 		createLicenseTypeControl(container);
 
 		if (workloadType == DbWorkload.Oltp) {
@@ -293,19 +274,21 @@ public class CreateADBWizardPage extends WizardPage {
 			serverlessDeploymentRadioButton.addSelectionListener(serverlessListener);
 			dedicatedDeploymentRadioButton.addSelectionListener(dedicatedListener);
 		}
-		
-		if(workloadType != DbWorkload.Ajd) {
-			alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
-		        @Override
-		        public void widgetSelected(SelectionEvent event) {
-		        	alwaysFreeButtonSelectionAction(event, container);
-		        }
-		    });
-		}
 
-		setControl(container);
-		isInitialized = true;
-	}
+		// TODO: should be controlled based on whether account is free tier.
+		alwaysFreeCheckButton.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent event) {
+	        	alwaysFreeButtonSelectionAction(event, container);
+	        }
+	    });
+
+        passwordPanel.addPasswordModifyListener(f);
+
+        setControl(container);
+        isInitialized = true;
+    }
+
 	
 	private void serverlessButtonSelection(Composite container) {
 		synchronized (lock) {
@@ -444,6 +427,8 @@ public class CreateADBWizardPage extends WizardPage {
 	private void alwaysFreeButtonSelectionAction(SelectionEvent event, Composite container) {
         Button btn = (Button) event.getSource();
         if(btn.getSelection()) {
+            // Always Free Selected
+            //databaseVersionCbo.add("21c");
         	storageInTBSpinner.dispose();
         	alwaysFreeStorageInTBText = new Text(container, SWT.BORDER | SWT.SINGLE);
     		GridData gdFreeStorage = new GridData(GridData.FILL_HORIZONTAL);
@@ -464,6 +449,11 @@ public class CreateADBWizardPage extends WizardPage {
         	licenseTypeIncludedRadioButton.setEnabled(false);
         	licenseTypeGroup.setEnabled(false);
         } else {
+            //databaseVersionCbo.remove("21c");
+            //databaseVersionCbo.select(0);
+            //version21cWarning.setText("");
+            //warningIcon.setImage(null);
+
         	alwaysFreeStorageInTBText.dispose();
         	createStorageInTBSpinner(container);
     		storageInTBSpinner.moveBelow(storageInTBLabel);
@@ -472,7 +462,7 @@ public class CreateADBWizardPage extends WizardPage {
         	
 			cpuCoreCountSpinner.setSelection(ADBConstants.CPU_CORE_COUNT_DEFAULT);
         	cpuCoreCountSpinner.setEnabled(true);
-        	autoScalingEnabledCheckBox.setSelection(false);
+        	autoScalingEnabledCheckBox.setSelection(true);
         	autoScalingEnabledCheckBox.setEnabled(true);
         	licenseTypeIncludedRadioButton.setSelection(false);
         	licenseTypeOwnRadioButton.setSelection(true);
@@ -483,11 +473,10 @@ public class CreateADBWizardPage extends WizardPage {
 	}
 	
 	private void createAlwaysFreeControl(Composite container) {
-		if(workloadType == DbWorkload.Ajd)
-	      return;
-		
+		// TODO: this should be based on the tier of the account
+
 		alwaysFreeLabel = new Label(container, SWT.NULL);
-		alwaysFreeLabel.setText("Always Free");
+		alwaysFreeLabel.setText("Always Free:");
 		alwaysFreeCheckButton = new Button(container, SWT.CHECK);
 		alwaysFreeCheckButton.setText("Show only Always Free configuration options");
 		GridData alwaysFreeGD = new GridData(GridData.FILL_HORIZONTAL);
@@ -509,6 +498,7 @@ public class CreateADBWizardPage extends WizardPage {
 		autoScalingLabel = new Label(container, SWT.NULL);
 		autoScalingLabel.setText("&Auto Scaling:");
 		autoScalingEnabledCheckBox = new Button(container, SWT.CHECK);
+		autoScalingEnabledCheckBox.setSelection(true);  // default is no always free, so default auto-scaling
 		autoScalingEnabledCheckBox.setText("Enable auto scaling");
 		GridData gd5 = new GridData(GridData.FILL_HORIZONTAL);
 		autoScalingEnabledCheckBox.setLayoutData(gd5);
@@ -575,18 +565,6 @@ public class CreateADBWizardPage extends WizardPage {
 
     public String getDatabaseName() {
         return databaseNameText.getText();
-    }
-
-    public String getAdminPassword() {
-        return adminPasswordText.getText();
-    }
-
-    public String getConfirmAdminPassword() {
-        return confirmAdminPasswordText.getText();
-    }
-
-    public boolean isStoreAdminPassword() {
-        return this.saveToSecureStoreBtn.getSelection();
     }
 
     public Boolean isAutoScalingEnabled() {
@@ -678,145 +656,22 @@ public class CreateADBWizardPage extends WizardPage {
 
     public MultiStatus validate() {
         MultiStatus multiStatus = new MultiStatus(Activator.PLUGIN_ID, 0, "", null);
-        IStatus status = validatePasswords();
+        IStatus status = this.passwordPanel.validatePasswords();
         if (!status.isOK()) {
             multiStatus.add(status);
         }
         return multiStatus;
     }
 
-    private static final InputValidator<String> passwordInputValidator = new InputValidator<String>() {
-        @Override
-        public IStatus validate(String inputValue) {
-            if (inputValue == null || inputValue.trim().isEmpty()) {
-                return error("Passwords can't be empty");
-            }
-            if (inputValue.length() < 12 || inputValue.length() > 30) {
-                return error("Passwords must be between 12 and 30 characters long");
-            }
-            boolean containsAtLeastOneUpper = false;
-            boolean containsAtLeastOneLower = false;
-            boolean containsAtLeastOneNumber = false;
-            for (char character : inputValue.toCharArray()) {
-                if (Character.isUpperCase(character)) {
-                    containsAtLeastOneUpper = true;
-                } else if (Character.isLowerCase(character)) {
-                    containsAtLeastOneLower = true;
-                } else if (Character.isDigit(character)) {
-                    containsAtLeastOneNumber = true;
-                } else {
-                    if (character == '"') {
-                        return error("Passwords must be between 12 and 30 characters long");
-                    }
-                }
-            }
-            if (!containsAtLeastOneLower) {
-                return error("Password must contain at least one lower case character");
-            }
-            if (!containsAtLeastOneUpper) {
-                return error("Password must contain at least one upper case character");
-            }
-            if (!containsAtLeastOneNumber) {
-                return error("Password must contain at least one number");
-            }
-            if (inputValue.toLowerCase().contains("admin")) {
-                return error("Passwords cannot contain the word 'admin' in any case");
-            }
-            return Status.OK_STATUS;
-        }
-
-    };
-
-    private final PasswordInputValidator passwordValidator = new PasswordInputValidator(passwordInputValidator);
-
-    private IStatus validatePasswords() {
-        IStatus status = validatePassword(this.adminPasswordText);
-        if (!status.isOK()) {
-            return status;
-        }
-        String password = this.adminPasswordText.getText();
-        String confirmPassword = this.confirmAdminPasswordText.getText();
-        if (!password.equals(confirmPassword)) {
-            return error("Confirmed password must match password");
-        }
-        return Status.OK_STATUS;
+    public String getAdminPassword() {
+        return passwordPanel.getAdminPassword();
     }
 
-    private IStatus validatePassword(Text source) {
-        return passwordValidator.validate(source);
+    public boolean isStoreAdminPassword() {
+        return passwordPanel.isStoreAdminPassword();
     }
 
-    private final static List<Character> PASSWORD_CHARS;
-    private final static List<Character> LOWER_CASE = new ArrayList<>(26);
-    private final static List<Character> UPPER_CASE = new ArrayList<>(26);
-    private final static List<Character> DIGITS = new ArrayList<>(10);
-    private final static List<?> AT_LEAST_ONE[] = {LOWER_CASE, UPPER_CASE, DIGITS};
-
-    static {
-        List<Character> characters = new ArrayList<>();
-        for (int i = (int) 'a'; i <= (int) 'z'; i++) {
-            LOWER_CASE.add((char) i);
-        }
-
-        for (int i = (int) 'A'; i <= (int) 'Z'; i++) {
-            UPPER_CASE.add((char) i);
-        }
-
-        for (int i = (int) '0'; i <= (int) '9'; i++) {
-            DIGITS.add((char) i);
-        }
-
-        characters.addAll(LOWER_CASE);
-        characters.addAll(UPPER_CASE);
-        characters.addAll(DIGITS);
-        characters.addAll(Arrays.asList('!', '@', '#','$', '%', '^', '&', '*', '(', ')', '+', '=', '-', '?'));
-
-        PASSWORD_CHARS = Collections.unmodifiableList(characters);
-    }
-
-    private String generateAdminPassword() {
-        final int minSize = 12;
-        final int maxSize = 30;
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        int length = random.nextInt(minSize, maxSize + 1);
-        StringBuilder password = new StringBuilder();
-        
-        for (int i = 0; i < length; i++)
-        {
-            int nextInt = random.nextInt(0, PASSWORD_CHARS.size());
-            password.append(PASSWORD_CHARS.get(nextInt));
-        }
-        
-        // get a list of three unique random indices that are within the
-        // password length
-        List<Integer>  checkOffsets = new ArrayList<>();
-        while(checkOffsets.size() < 3)
-        {
-            int nextInt = random.nextInt(0, length);
-            if (!checkOffsets.contains(nextInt)) {
-                checkOffsets.add(nextInt);
-            }
-        }
-        
-        // for each offset, check the character at that offset.  If it's
-        // not one of the mandatory ones, replace it.
-        for (int i = 0; i < 3; i++)
-        {
-            Integer index = checkOffsets.get(i);
-            char charAt = password.charAt(index);
-            List<?> allowed = AT_LEAST_ONE[i];
-            if (!allowed.contains(charAt))
-            {
-                int nextInt = random.nextInt(0, allowed.size());
-                @SuppressWarnings("unchecked")
-                Character allowedChar = ((List<Character>)allowed).get(nextInt);
-                password.setCharAt(index, allowedChar);
-            }
-        }
-        return password.toString();
-    }
-
-    private static IStatus error(String message) {
-        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
+    public String getConfirmAdminPassword() {
+        return passwordPanel.getConfirmAdminPassword();
     }
 }

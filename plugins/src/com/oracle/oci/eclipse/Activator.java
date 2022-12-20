@@ -4,13 +4,25 @@
  */
 package com.oracle.oci.eclipse;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+
+import com.oracle.oci.eclipse.account.AuthProvider;
+import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
+import com.oracle.oci.eclipse.ui.explorer.database.actions.CustomADBInstanceActionFactory;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -23,6 +35,9 @@ public class Activator extends AbstractUIPlugin {
 
     // The shared instance
     private static Activator plugin;
+    
+    private static Object EXT_POINT_LOCK = new Object();
+    private static List<CustomADBInstanceActionFactory> databaseActions;
 
     /**
      * The constructor
@@ -46,7 +61,14 @@ public class Activator extends AbstractUIPlugin {
      */
     @Override
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
+        try {
+            ADBInstanceClient.getInstance().dispose();
+            AuthProvider.getInstance().dispose();
+        } catch (Throwable e) {
+            ErrorHandler.logErrorStack("Disposing bundle", e);
+        }
+
+        plugin = null;        
         super.stop(context);
     }
 
@@ -93,5 +115,37 @@ public class Activator extends AbstractUIPlugin {
     }
     public static Image getImage(String key) {
         return getDefault().getImageRegistry().get(key);
+    }
+
+    public static List<CustomADBInstanceActionFactory> getDatabaseActionFactories() {
+        synchronized(EXT_POINT_LOCK) {
+            if (databaseActions == null) {
+                databaseActions = new ArrayList<CustomADBInstanceActionFactory>();
+                IExtensionRegistry pluginRegistry = Platform.getExtensionRegistry();
+                IExtensionPoint extensionPoint = pluginRegistry.getExtensionPoint(
+                        "com.oracle.oci.eclipse.plugin", "databaseInstanceActions"); //$NON-NLS-1$ //$NON-NLS-2$
+                IExtension[] extensions = extensionPoint.getExtensions();
+                for (int extensionIndex = 0; extensionIndex < extensions.length; extensionIndex++) {
+                    IConfigurationElement[] configElements = extensions[extensionIndex].getConfigurationElements();
+                    for (int elementIndex = 0; elementIndex < configElements.length; ++elementIndex) {
+                        if (configElements[elementIndex].getName().equals("actionFactory")) //$NON-NLS-1$
+                        {
+                            IConfigurationElement configElement = configElements[elementIndex];
+                            CustomADBInstanceActionFactory actionFactory = null;
+                            try {
+                                actionFactory = (CustomADBInstanceActionFactory) configElement
+                                        .createExecutableExtension("class"); //$NON-NLS-1$
+                            } catch (Exception e) {
+                                ErrorHandler.logErrorStack("Create action extension", e);
+                            }
+                            if (actionFactory != null) {
+                                databaseActions.add(actionFactory);
+                            }
+                        }
+                    }
+                }
+            }
+            return databaseActions;
+        }
     }
 }
