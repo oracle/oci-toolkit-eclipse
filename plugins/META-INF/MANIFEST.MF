@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Vendor: Oracle
 Bundle-Name: Oracle Cloud Infrastructure Toolkit
 Bundle-SymbolicName: com.oracle.oci.eclipse.plugin;singleton:=true
-Bundle-Version: 1.3.3.qualifier
+Bundle-Version: 1.3.4.qualifier
 Bundle-Activator: com.oracle.oci.eclipse.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -81,11 +81,16 @@ Bundle-ClassPath: .
  ,lib/thirdparty/slf4j-api-1.7.33.jar
  ,lib/thirdparty/vavr-0.10.2.jar
  ,lib/thirdparty/vavr-match-0.10.2.jar
-Export-Package: com.oracle.bmc.core.model,
+Export-Package: com.oracle.bmc.auth,
+ com.oracle.bmc.core.model,
  com.oracle.bmc.database,
  com.oracle.bmc.database.model,
  com.oracle.bmc.identity.model,
+ com.oracle.bmc.identity.requests,
  com.oracle.bmc.identitydataplane,
+ com.oracle.bmc.identitydataplane.model,
+ com.oracle.bmc.identitydataplane.requests,
+ com.oracle.bmc.identitydataplane.responses,
  com.oracle.bmc.keymanagement.model,
  com.oracle.bmc.objectstorage.model,
  com.oracle.bmc.objectstorage.responses,
