@@ -26,7 +26,6 @@ import java.beans.PropertyChangeEvent;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -41,7 +40,6 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -83,6 +81,7 @@ import com.oracle.bmc.database.requests.StopAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.UpdateAutonomousDatabaseRegionalWalletRequest;
 import com.oracle.bmc.database.requests.UpdateAutonomousDatabaseRequest;
 import com.oracle.bmc.database.requests.UpdateAutonomousDatabaseWalletRequest;
+import com.oracle.bmc.database.responses.CreateAutonomousDatabaseResponse;
 import com.oracle.bmc.database.responses.GenerateAutonomousDatabaseWalletResponse;
 import com.oracle.bmc.database.responses.GetAutonomousDatabaseRegionalWalletResponse;
 import com.oracle.bmc.database.responses.GetAutonomousDatabaseResponse;
@@ -113,12 +112,14 @@ import com.oracle.oci.eclipse.ui.explorer.database.TerminateADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.UpdateADBAccessControlWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.UpdateLicenseTypeADBWizard;
 import com.oracle.oci.eclipse.ui.explorer.database.UpgradeADBInstanceToPaidWizard;
+import com.oracle.oci.eclipse.util.FileUtils;
 
 public class ADBInstanceClient extends BaseClient {
 
     private static ADBInstanceClient single_instance = null;
-    private static DatabaseClient databseClient;
-    private static Map<String, ADBInstanceWrapper> instancesMap = new LinkedHashMap<String, ADBInstanceWrapper>();
+    private DatabaseClient databseClient;
+    private Map<String, ADBInstanceWrapper> instancesMap = 
+        Collections.synchronizedMap(new LinkedHashMap<String, ADBInstanceWrapper>());
 
     private ADBInstanceClient() {
         if (databseClient == null) {
@@ -126,7 +127,7 @@ public class ADBInstanceClient extends BaseClient {
         }
     }
 
-    public static ADBInstanceClient getInstance() {
+    public synchronized static ADBInstanceClient getInstance() {
         if (single_instance == null) {
             single_instance = new ADBInstanceClient();
         }
@@ -145,19 +146,28 @@ public class ADBInstanceClient extends BaseClient {
     }
 
     private DatabaseClient createADBInstanceClient() {
-        databseClient = new DatabaseClient(AuthProvider.getInstance().getProvider());
-        databseClient.setRegion(AuthProvider.getInstance().getRegion());
+        AuthProvider instance = AuthProvider.getInstance();
+        databseClient = new DatabaseClient(instance.getProvider());
+        databseClient.setRegion(instance.getRegion());
         return databseClient;
     }
 
     @Override
     public void close() {
-        try {
+        DatabaseClient oldDBClient = null;
+        synchronized (this) {
             if (databseClient != null) {
-                databseClient.close();
+                oldDBClient = databseClient;
+                databseClient = null;
             }
-        } catch (Exception e) {
-            ErrorHandler.logErrorStack(e.getMessage(), e);
+        }
+        if (oldDBClient != null) {
+            try {
+                oldDBClient.close();
+            }
+            catch (Exception e) {
+                ErrorHandler.logErrorStack(e.getMessage(), e);
+            }
         }
     }
 
@@ -244,12 +254,20 @@ public class ADBInstanceClient extends BaseClient {
                 .build();
         List<AutonomousDatabaseSummary> instances = new ArrayList<>();
 
-        if(databseClient == null)
+        DatabaseClient dbClient = null;
+        // make sure our copy is consistent; should we try to avoid it being
+        // closed while we're using it or just accept that might happen?
+        synchronized(ADBInstanceClient.class) { 
+            dbClient = databseClient;
+        }
+        
+        if(dbClient == null) {
             return instances;
-
+        }
+        
         ListAutonomousDatabasesResponse response = null;
         try {
-            response = databseClient.listAutonomousDatabases(listInstancesRequest);
+            response = dbClient.listAutonomousDatabases(listInstancesRequest);
         } catch(Throwable e) {
             // To handle forbidden error
             ErrorHandler.logError("Unable to list Autonomous Databases: "+e.getMessage());
@@ -273,7 +291,11 @@ public class ADBInstanceClient extends BaseClient {
 
         return instances;
     }
-    
+
+    public ADBInstanceWrapper getInstanceDetails(final String instanceId) {
+        return instancesMap.get(instanceId);
+    }
+
     private void startInstance(final AutonomousDatabaseSummary instance) {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
@@ -312,10 +334,6 @@ public class ADBInstanceClient extends BaseClient {
         .stopAutonomousDatabase(
                 StopAutonomousDatabaseRequest.builder().autonomousDatabaseId(instanceId).build())
         .getAutonomousDatabase();
-    }
-
-    public ADBInstanceWrapper getInstanceDetails(final String instanceId) {
-        return instancesMap.get(instanceId);
     }
 
     private void scaleUpDownInstance(final AutonomousDatabaseSummary instance) {
@@ -545,12 +563,10 @@ public class ADBInstanceClient extends BaseClient {
 
     }
 
-    public void createInstance(final CreateAutonomousDatabaseDetails request) {
+    public CreateAutonomousDatabaseResponse createInstance(final CreateAutonomousDatabaseDetails request) {
         //CreateAutonomousDatabaseResponse response =
-                databseClient.createAutonomousDatabase(
-                        CreateAutonomousDatabaseRequest.builder()
-                        .createAutonomousDatabaseDetails(request)
-                        .build());
+        return databseClient.createAutonomousDatabase(
+                CreateAutonomousDatabaseRequest.builder().createAutonomousDatabaseDetails(request).build());
     }
 
     private void terminate(final AutonomousDatabaseSummary instance) {
@@ -656,8 +672,8 @@ public class ADBInstanceClient extends BaseClient {
         } else {
             ErrorHandler.logInfo("Wallet directory already exists : "+ walletDirectory);
             try {
-                FileUtils.cleanDirectory(file);
-            } catch (IOException e) {
+                FileUtils.cleanupDirectory(file);
+            } catch (Exception e) {
                 ErrorHandler.logInfo("Could not clean existing wallet directory : "+ walletDirectory);
             }
         }
@@ -685,6 +701,7 @@ public class ADBInstanceClient extends BaseClient {
         }
     }
     
+
     public void rotateWallet(final AutonomousDatabaseSummary instance, final String walletType) {
     	Display.getDefault().asyncExec(new Runnable() {
             @Override

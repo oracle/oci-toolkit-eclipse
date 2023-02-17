@@ -4,9 +4,11 @@
  */
 package com.oracle.oci.eclipse.ui.explorer.database;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -17,9 +19,11 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 
+import com.oracle.bmc.database.model.AutonomousDatabase;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails.Builder;
+import com.oracle.bmc.database.responses.CreateAutonomousDatabaseResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.PreferencesWrapper;
 import com.oracle.oci.eclipse.sdkclients.ADBInstanceClient;
@@ -82,15 +86,32 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
 			createADBRequest = createADBRequestBuilder.isAutoScalingEnabled(page.isAutoScalingEnabled())
 					.isFreeTier(page.isAlwaysFreeInstance()).build();
 		}
-    	
+    	final boolean isStoreAdminPassword = page.isStoreAdminPassword();
+    	final String adminPassword = page.getAdminPassword();
         IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) throws InvocationTargetException {
-                ADBInstanceClient.getInstance().createInstance(createADBRequest);
+                CreateAutonomousDatabaseResponse response = 
+                        ADBInstanceClient.getInstance().createInstance(createADBRequest);
+                AutonomousDatabase autonomousDatabase = response.getAutonomousDatabase();
+                System.out.println(autonomousDatabase.getId());
+                // if that worked, store the admin password if checked
+                if (isStoreAdminPassword)
+                {
+                    String key = PreferencesWrapper.createSecurePreferenceKey(autonomousDatabase.getCompartmentId(), autonomousDatabase.getId());
+                    try {
+                        ISecurePreferences securePreferences = PreferencesWrapper.getSecurePreferences();
+                        securePreferences.put(key, adminPassword, true);
+                        securePreferences.flush();
+                    } catch (StorageException | IOException e) {
+                       ErrorHandler.logErrorStack("Error storing admin password", e);
+                    }
+                }
+
                 monitor.done();
             }
         };
-        try {
+        try { 
             getContainer().run(true, true, op);
         } catch (InterruptedException e) {
             return false;
@@ -100,16 +121,6 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
             return false;
         }
 
-        // if that worked, store the admin password if checked
-        if (page.isStoreAdminPassword())
-        {
-            String key = PreferencesWrapper.createSecurePreferenceKey(page.getADBCompartmentId(), page.getDatabaseName());
-            try {
-                PreferencesWrapper.getSecurePreferences().put(key, page.getAdminPassword(), true);
-            } catch (StorageException e) {
-               ErrorHandler.logErrorStack("Error storing admin password", e);
-            }
-        }
         
         return true;
     }

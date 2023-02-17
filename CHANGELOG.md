@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## 1.3.3
+### Added
+- Autononmous Database Support
+   - User
+      - Add APEX instance type.
+   - Adopter
+      - New Extension point to add actions to DB dashboard.
+      - API support for vaults and client identity.
+      - Fix for significant race conditions in OCI access singletons.
+- Update to OCI Java SDK 2.29.1.   
+
 ## 1.3.2
 ### Added
 - Autonomous Database Support

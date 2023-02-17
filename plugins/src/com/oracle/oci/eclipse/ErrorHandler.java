@@ -28,12 +28,12 @@ public class ErrorHandler {
 
     public static IStatus reportException(String errorMessage, Throwable e) {
         errorMessage = getErrorMsg(errorMessage,  e);
-        IStatus status = new Status(IStatus.ERROR, Activator.getDefault().PLUGIN_ID, errorMessage, e);
+        IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, errorMessage, e);
         return status;
     }
     public static IStatus reportAndShowException(String errorMessage, Throwable e) {
         errorMessage = getErrorMsg(errorMessage,  e);
-        IStatus status = new Status(IStatus.ERROR, Activator.getDefault().PLUGIN_ID, errorMessage, e);
+        IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, errorMessage, e);
         StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG );
         return status;
     }

@@ -18,21 +18,29 @@ import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.model.CreateAuthTokenDetails;
+import com.oracle.bmc.identity.model.Group;
 import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.bmc.identity.model.Tenancy;
 import com.oracle.bmc.identity.model.User;
+import com.oracle.bmc.identity.model.UserGroupMembership;
 import com.oracle.bmc.identity.requests.CreateAuthTokenRequest;
 import com.oracle.bmc.identity.requests.GetTenancyRequest;
 import com.oracle.bmc.identity.requests.GetUserRequest;
 import com.oracle.bmc.identity.requests.ListAvailabilityDomainsRequest;
 import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
+import com.oracle.bmc.identity.requests.ListGroupsRequest;
 import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
+import com.oracle.bmc.identity.requests.ListUserGroupMembershipsRequest;
+import com.oracle.bmc.identity.requests.ListUsersRequest;
 import com.oracle.bmc.identity.responses.CreateAuthTokenResponse;
 import com.oracle.bmc.identity.responses.GetTenancyResponse;
 import com.oracle.bmc.identity.responses.GetUserResponse;
 import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
+import com.oracle.bmc.identity.responses.ListGroupsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
+import com.oracle.bmc.identity.responses.ListUserGroupMembershipsResponse;
+import com.oracle.bmc.identity.responses.ListUsersResponse;
 import com.oracle.oci.eclipse.ErrorHandler;
 import com.oracle.oci.eclipse.account.AuthProvider;
 
@@ -182,5 +190,30 @@ public class IdentClient extends BaseClient {
         GetUserResponse response = identityClient.getUser(request);
 
         return response.getUser();
+    }
+
+    public List<User> getUsers() {
+        ListUsersRequest request = ListUsersRequest.builder()
+                .compartmentId(AuthProvider.getInstance().getCompartmentId()).build();
+        ListUsersResponse listUsers = identityClient.listUsers(request);
+
+        return listUsers.getItems();
+    }
+
+    public List<Group> getGroups() {
+        ListGroupsRequest request = ListGroupsRequest.builder()
+                .compartmentId(AuthProvider.getInstance().getCompartmentId()).build();
+        ListGroupsResponse listGroups = identityClient.listGroups(request);
+
+        return listGroups.getItems();
+    }
+
+    public List<UserGroupMembership> getGroupsFor(User user) {
+        ListUserGroupMembershipsRequest request = 
+                ListUserGroupMembershipsRequest.builder().compartmentId(AuthProvider.getInstance().getCompartmentId())
+                .userId(user.getId()).build();
+        ListUserGroupMembershipsResponse response = identityClient.listUserGroupMemberships(request);
+        
+        return response.getItems();
     }
 }

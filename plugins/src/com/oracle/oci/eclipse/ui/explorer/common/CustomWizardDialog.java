@@ -45,7 +45,13 @@ public class CustomWizardDialog extends WizardDialog {
 		
 	}
 	
-	public void setCancelButtonText(String cancelButtonText) {
+	@Override
+    protected void finishPressed() {
+        // TODO Auto-generated method stub
+        super.finishPressed();
+    }
+
+    public void setCancelButtonText(String cancelButtonText) {
 		this.cancelButtonText = cancelButtonText;
 	}
 }

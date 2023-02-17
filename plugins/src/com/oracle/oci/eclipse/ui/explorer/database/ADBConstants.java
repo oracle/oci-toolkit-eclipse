@@ -31,6 +31,8 @@ public class ADBConstants {
 	public static final String CREATE_ADW_INSTANCE = "Create ADW Instance";
 	public static final String CREATE_ATP_INSTANCE = "Create ATP Instance";
 	public static final String CREATE_AJD_INSTANCE = "Create AJD Instance";
+	public static final String CREATE_APEX_INSTANCE = "Create APEX Instance";
+
 	public static final String REGISTER_DRIVER = "Register JDBC Driver";
 			
 	public static final String START = "Start";
