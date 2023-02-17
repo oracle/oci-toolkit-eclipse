@@ -34,6 +34,8 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.DbWorkload;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase.LicenseModel;
@@ -174,27 +176,12 @@ public class CreateADBWizardPage extends WizardPage {
         databaseVersionCbo.select(0);
         GridDataFactory.defaultsFor(databaseVersionCbo).align(SWT.FILL, SWT.CENTER).indent(0,5).grab(true,true)
             .applyTo(databaseVersionCbo);
-
-//		warningIcon = new Label(versionPanel, SWT.NONE);
-//		version21cWarning = new Label(versionPanel, SWT.WRAP);
-//		GridDataFactory.defaultsFor(version21cWarning).grab(true, false).align(SWT.FILL, SWT.FILL).applyTo(version21cWarning);
-//		databaseVersionCbo.addSelectionListener(new SelectionAdapter() {
-//            @Override
-//            public void widgetSelected(SelectionEvent e) {
-//                String text = databaseVersionCbo.getText();
-//                if ("21c".equals(text))
-//                {
-//                    version21cWarning.setText("Free Tier Autonomous Databases using Oracle Database 21c cannot currently be upgraded to paid instances.");
-//                    warningIcon.setImage(PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJS_WARN_TSK));
-//                }
-//                else
-//                {
-//                    version21cWarning.setText("");
-//                    warningIcon.setImage(null);
-//                }
-//                version21cWarning.getParent().layout();
-//            }
-//        });
+        databaseVersionCbo.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateStatus(validate());
+			}
+        });
 
 		Label cpuCoreCountLabel = new Label(container, SWT.NULL);
 		cpuCoreCountLabel.setText("&CPU core count:");
@@ -428,7 +415,7 @@ public class CreateADBWizardPage extends WizardPage {
         Button btn = (Button) event.getSource();
         if(btn.getSelection()) {
             // Always Free Selected
-            //databaseVersionCbo.add("21c");
+            databaseVersionCbo.add("21c");
         	storageInTBSpinner.dispose();
         	alwaysFreeStorageInTBText = new Text(container, SWT.BORDER | SWT.SINGLE);
     		GridData gdFreeStorage = new GridData(GridData.FILL_HORIZONTAL);
@@ -449,8 +436,8 @@ public class CreateADBWizardPage extends WizardPage {
         	licenseTypeIncludedRadioButton.setEnabled(false);
         	licenseTypeGroup.setEnabled(false);
         } else {
-            //databaseVersionCbo.remove("21c");
-            //databaseVersionCbo.select(0);
+            databaseVersionCbo.remove("21c");
+            databaseVersionCbo.select(0);
             //version21cWarning.setText("");
             //warningIcon.setImage(null);
 
@@ -633,20 +620,33 @@ public class CreateADBWizardPage extends WizardPage {
         if (status.isMultiStatus()) {
             if (!status.isOK()) {
                 MultiStatus multiStatus = (MultiStatus) status;
+                int highestSeverity = IStatus.OK;
                 for (IStatus child : multiStatus.getChildren()) {
-                    if (!child.isOK()) {
-                        fullStatus = new Status(child.getSeverity(), Activator.PLUGIN_ID, child.getMessage());
+                    int severity = child.getSeverity();
+					if (severity > highestSeverity) {
+                        fullStatus = new Status(severity, Activator.PLUGIN_ID, child.getMessage());
+                        highestSeverity = severity;
                     }
                 }
             }
         }
         if (isInitialized) {
+        	setImageDescriptor(null);
             if (!fullStatus.isOK()) {
-                // don't update status if we're not initialized yet
-                setErrorMessage(fullStatus.getMessage());
-                setPageComplete(false);
+            	if (fullStatus.getSeverity() == IStatus.ERROR) {
+	                // don't update status if we're not initialized yet
+	                setErrorMessage(fullStatus.getMessage());
+	                setPageComplete(false);
+            	}
+            	else {
+            		setErrorMessage(null);
+            		setMessage(fullStatus.getMessage(), fullStatus.getSeverity());
+            		setPageComplete(true);
+            		setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJS_WARN_TSK));
+            	}
             } else {
                 setErrorMessage(null);
+                setMessage("Create a New ADB Instance", IStatus.OK);
                 setPageComplete(true);
             }
         } else {
@@ -659,6 +659,10 @@ public class CreateADBWizardPage extends WizardPage {
         IStatus status = this.passwordPanel.validatePasswords();
         if (!status.isOK()) {
             multiStatus.add(status);
+        }
+        if ("21c".equals(this.databaseVersionCbo.getText())) {
+        	multiStatus.add(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 
+        			"Free Tier Autonomous Databases using Oracle Database 21c cannot currently be upgraded to paid instances."));
         }
         return multiStatus;
     }
@@ -674,4 +678,8 @@ public class CreateADBWizardPage extends WizardPage {
     public String getConfirmAdminPassword() {
         return passwordPanel.getConfirmAdminPassword();
     }
+
+	public String getDatabaseVersion() {
+		return databaseVersionCbo.getText();
+	}
 }
