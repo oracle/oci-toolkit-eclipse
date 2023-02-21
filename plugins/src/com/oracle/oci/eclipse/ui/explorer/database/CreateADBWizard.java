@@ -75,7 +75,8 @@ public class CreateADBWizard  extends Wizard implements INewWizard {
         .adminPassword(page.getAdminPassword())
         .dbName(page.getDatabaseName())
         .dbWorkload(workloadType)
-        .licenseModel(page.getLicenseModel());
+        .licenseModel(page.getLicenseModel())
+        .dbVersion(page.getDatabaseVersion());
 		
 		final CreateAutonomousDatabaseDetails createADBRequest;
 		final boolean isDedicated = page.isDedicatedInfra();

@@ -2,7 +2,7 @@
 <feature
       id="com.oracle.oci.eclipse.feature"
       label="Oracle Cloud Infrastructure Toolkit"
-      version="1.3.3.qualifier"
+      version="1.3.4.qualifier"
       provider-name="Oracle">
 
    <description>
