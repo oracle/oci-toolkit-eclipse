@@ -11,7 +11,7 @@ It also supports switching between multiple accounts and regions.
 
 The project documentation is [here](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/eclipsetoolkit.htm).
 
-## Download and Installation
+## Installation
 
 The toolkit `com.oracle.oci.eclipse.zip` can be downloaded from the [releases section on GitHub](https://github.com/oracle/oci-toolkit-eclipse/releases).
 
@@ -20,22 +20,6 @@ For basic set up and configuration, see [Getting Started](https://docs.cloud.ora
 ## Using the Toolkit
 
 For use instructions, see [here](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/eclipseusing.htm).
-
-## Help
-
-For details on contributions, questions, or feedback, see [Contact Us](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/eclipsetoolkit.htm#ContactUs).
-
-## Changes
-
-See [CHANGELOG](/CHANGELOG.md).
-
-## Contributing
-
-This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)
-
-## Security
-
-Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
 
 ##### Building the Toolkit
 
@@ -55,10 +39,24 @@ plugin from the plugins directory.  Do not import from the root of the git clone
 
 - [Announcing Oracle Cloud Infrastructure Toolkit for Eclipse](https://blogs.oracle.com/cloud-infrastructure/announcing-oracle-cloud-infrastructure-toolkit-for-eclipse).
 
+## Help
+
+For details on contributions, questions, or feedback, see [Contact Us](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/eclipsetoolkit.htm#ContactUs).
+
+## Changes
+
+See [CHANGELOG](/CHANGELOG.md).
+
+## Contributing
+
+This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)
+
+## Security
+
+Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
+
 ## License
 
-Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2019, 2023 Oracle and/or its affiliates.
 
-Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl
-
-See [LICENSE](/LICENSE.txt) for more details.
+Released under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl
