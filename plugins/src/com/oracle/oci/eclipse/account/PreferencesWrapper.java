@@ -22,7 +22,7 @@ public class PreferencesWrapper {
     static String pathName = SECURE_STORAGE_KEY_PATH + PREFERENCES_LOCATION;
     private static Preferences systemPrefs = Preferences.userRoot().node(PREFERENCES_LOCATION);
     private static ISecurePreferences securePreferences = SecurePreferencesFactory.getDefault().node(pathName);
-    private final static String VERSION = "1.3.4";
+    private final static String VERSION = "1.4.0";
 
     private final static String OCI_IDE_DEBUG_CLEAR_PREFS_KEY = "oracle.debug.oci-ide-prefs.clear";
     

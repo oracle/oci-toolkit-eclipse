@@ -1,68 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
-			<attribute name="module" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" output="bin" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-circuitbreaker-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-common-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-common-httpclient-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-common-httpclient-jersey-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-containerengine-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-core-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-database-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-identity-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-identitydataplane-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-keymanagement-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-objectstorage-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-objectstorage-extensions-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-objectstorage-generated-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-resourcemanager-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-secrets-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-vault-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-workrequests-3.24.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/aopalliance-repackaged-2.6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/bcpkix-jdk15to18-1.74.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/bcprov-jdk15to18-1.74.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/bcutil-jdk15to18-1.74.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/commons-codec-1.11.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/commons-logging-1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/hk2-api-2.6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/hk2-locator-2.6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/hk2-utils-2.6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/httpclient-4.5.13.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/httpcore-4.4.13.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-annotations-2.15.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-core-2.15.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-databind-2.13.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-module-jaxb-annotations-2.12.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.activation-api-1.2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.annotation-api-2.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.inject-2.6.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.ws.rs-api-2.1.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.xml.bind-api-2.3.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/javassist-3.25.0-GA.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/javax.annotation-api-1.3.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-apache-connector-2.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-client-2.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-common-2.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-entity-filtering-2.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-hk2-2.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-media-json-jackson-2.35.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/osgi-resource-locator-1.0.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/resilience4j-circuitbreaker-1.7.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/resilience4j-core-1.7.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/slf4j-api-1.7.33.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/vavr-0.10.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/thirdparty/vavr-match-0.10.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-circuitbreaker-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-common-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-containerengine-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-core-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-database-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-identity-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-identitydataplane-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-keymanagement-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-objectstorage-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-objectstorage-extensions-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-objectstorage-generated-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-secrets-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-vault-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/sdk/oci-java-sdk-workrequests-2.49.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/aopalliance-repackaged-2.6.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/bcpkix-jdk15on-1.70.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/bcprov-jdk15on-1.70.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/bcutil-jdk15on-1.70.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/checker-qual-3.12.0.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/commons-codec-1.11.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/commons-logging-1.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/error_prone_annotations-2.7.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/failureaccess-1.0.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/guava-31.0.1-jre.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/hk2-api-2.6.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/hk2-locator-2.6.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/hk2-utils-2.6.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/httpclient-4.5.13.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/httpcore-4.4.13.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/j2objc-annotations-1.3.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-annotations-2.13.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-core-2.13.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-databind-2.13.4.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jackson-module-jaxb-annotations-2.12.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.activation-api-1.2.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.annotation-api-1.3.5.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.inject-2.6.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.ws.rs-api-2.1.6.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jakarta.xml.bind-api-2.3.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/javassist-3.25.0-GA.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/javax.annotation-api-1.3.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jcip-annotations-1.0-1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-apache-connector-2.35.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-client-2.35.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-common-2.35.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-entity-filtering-2.35.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-hk2-2.35.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jersey-media-json-jackson-2.35.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/jsr305-3.0.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/nimbus-jose-jwt-9.15.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/osgi-resource-locator-1.0.3.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/resilience4j-circuitbreaker-1.7.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/resilience4j-core-1.7.1.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/slf4j-api-1.7.33.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/vavr-0.10.2.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/thirdparty/vavr-match-0.10.2.jar" />
 </classpath>
