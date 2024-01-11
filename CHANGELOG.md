@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## 1.4.0
+### Added
+- Update to OCI Java SDK 3.24.
+
 ## 1.3.4
 ### Added
 - Autononmous Database Support

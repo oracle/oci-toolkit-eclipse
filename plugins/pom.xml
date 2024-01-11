@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>com.oracle.oci.eclipse</groupId>
 		<artifactId>com.oracle.oci.eclipse.root</artifactId>
-		<version>1.3.4-SNAPSHOT</version>
+		<version>1.4.0-SNAPSHOT</version>
 	</parent>
 
 	<properties>
-		<oci.java.sdk.ver>2.49.1</oci.java.sdk.ver>
+		<oci.java.sdk.ver>3.24.0</oci.java.sdk.ver>
 	</properties>
 
 	<!-- START: Delete Public GitHub -->
@@ -57,7 +57,7 @@
 							<certFormat>pem</certFormat>
 							<user>oci_dex_tools_grp</user>
 							<globalUID>pritpate</globalUID>
-							<fileToSign>${project.build.directory}/com.oracle.oci.eclipse.plugin-1.3.4-SNAPSHOT.jar</fileToSign>
+							<fileToSign>${project.build.directory}/com.oracle.oci.eclipse.plugin-1.4.0-SNAPSHOT.jar</fileToSign>
 							<signLocation>${project.build.directory}</signLocation>
 							<signMethod>java2</signMethod>
 						</configuration>
@@ -188,10 +188,10 @@
 					<version>${oci.java.sdk.ver}</version>
 				</dependency>
 				<dependency>
-                                        <groupId>com.oracle.oci.sdk</groupId>
-                                        <artifactId>oci-java-sdk-identitydataplane</artifactId>
-                                        <version>${oci.java.sdk.ver}</version>
-                                </dependency>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-identitydataplane</artifactId>
+                        <version>${oci.java.sdk.ver}</version>
+                </dependency>
 				<dependency>
 					<groupId>com.oracle.oci.sdk</groupId>
 					<artifactId>oci-java-sdk-vault</artifactId>
@@ -205,6 +205,16 @@
 				<dependency>
 					<groupId>com.oracle.oci.sdk</groupId>
 					<artifactId>oci-java-sdk-secrets</artifactId>
+					<version>${oci.java.sdk.ver}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.oracle.oci.sdk</groupId>
+					<artifactId>oci-java-sdk-resourcemanager</artifactId>
+					<version>${oci.java.sdk.ver}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.oracle.oci.sdk</groupId>
+					<artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
 					<version>${oci.java.sdk.ver}</version>
 				</dependency>
 			</dependencies>
@@ -267,4 +277,41 @@
 			</build>
 		</profile>
 	</profiles>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.eclipse.tycho
+										</groupId>
+										<artifactId>
+											tycho-packaging-plugin
+										</artifactId>
+										<versionRange>
+											[0.25.0,)
+										</versionRange>
+										<goals>
+											<goal>validate-id</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 </project>
